@@ -16,7 +16,10 @@ P0P1 = fd.TensorProductElement(DG_0, CG_1)
 RT_vert = fd.HDivElement(P0P1)
 RT = RT_horiz + RT_vert
 # FIXME: DG still need these operations?
-DG = fd.FunctionSpace(mesh, 'DG', 0)
+horiz_elt = fd.FiniteElement("DG", fd.triangle, 0)
+vert_elt = fd.FiniteElement("DG", fd.interval, 0)
+elt = fd.TensorProductElement(horiz_elt, vert_elt)
+DG = fd.FunctionSpace(mesh, elt)
 
 W = RT * DG
 
@@ -25,4 +28,8 @@ sigma, u = fd.TrialFunction(W)
 tau, v = fd.TestFunctions(W)
 
 x, y = fd.SpatialCoordinate(mesh)
+
+
+
+
 
