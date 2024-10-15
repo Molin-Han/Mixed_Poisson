@@ -63,7 +63,6 @@ bc1 = fd.DirichletBC(W.sub(0), fd.as_vector([0., 0.]), "bottom")
 bcs.append(bc1)
 nullspace = fd.VectorSpaceBasis(constant=True)
 
-
 # TODO: Set up a solver
 
 params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
