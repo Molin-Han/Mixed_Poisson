@@ -6,7 +6,13 @@ from firedrake.output import VTKFile
 
 # Extruded Mesh
 m = fd.CircleManifoldMesh(20, radius=2)
-mesh = fd.ExtrudedMesh(m, 5, extrusion_type='radial')
+
+height = 0.1
+nlayers = 5
+
+mesh = fd.ExtrudedMesh(m, nlayers,
+                       layer_height = height/nlayers,
+                       extrusion_type='radial')
 
 # Mixed Finite Element Space
 CG_1 = fd.FiniteElement("CG", fd.interval, 1)
@@ -34,8 +40,12 @@ tau, v = fd.TestFunctions(W)
 x, y = fd.SpatialCoordinate(mesh)
 
 # Some known function f
-theta = fd.Atan2(y,x)
-f = fd.Function(DG).interpolate(10 * fd.exp(-fd.pow(theta, 2)))
+theta = fd.atan2(y,x)
+f = fd.Function(DG).interpolate(10 * fd.exp(-pow(theta, 2)))
+One = fd.Function(DG).assign(1.0)
+area = fd.assemble(One*fd.dx)
+f_int = fd.assemble(f*fd.dx)
+f.interpolate(f - f_int/area)
 # f = fd.Function(DG).interpolate(
 #     10*fd.exp(-(pow(x - 0.5, 2) + pow(y - 0.5, 2)) / 0.02))
 
@@ -46,9 +56,11 @@ sol = fd.Function(W) # solution in mixed space
 
 # TODO: Need to impose the Boundary condition: use null space to do this?
 
-# bc0 = 
-# bc1 = 
-# bcs = [bc0, bc1]
+
+bc1 = fd.DirichletBC(W.sub(0), fd.as_vector([0., 0.]), "top")
+bcs = [bc1]
+bc1 = fd.DirichletBC(W.sub(0), fd.as_vector([0., 0.]), "bottom")
+bcs.append(bc1)
 nullspace = fd.VectorSpaceBasis(constant=True)
 
 
@@ -56,7 +68,7 @@ nullspace = fd.VectorSpaceBasis(constant=True)
 
 params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
 
-prob_w = fd.LinearVariationalProblem(a, L, sol)
+prob_w = fd.LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = fd.LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
 
 
