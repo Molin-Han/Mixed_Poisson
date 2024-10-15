@@ -34,8 +34,10 @@ tau, v = fd.TestFunctions(W)
 x, y = fd.SpatialCoordinate(mesh)
 
 # Some known function f
-f = fd.Function(DG).interpolate(
-    10*fd.exp(-(pow(x - 0.5, 2) + pow(y - 0.5, 2)) / 0.02))
+theta = fd.Atan2(y,x)
+f = fd.Function(DG).interpolate(10 * fd.exp(-fd.pow(theta, 2)))
+# f = fd.Function(DG).interpolate(
+#     10*fd.exp(-(pow(x - 0.5, 2) + pow(y - 0.5, 2)) / 0.02))
 
 a = (fd.dot(sigma, tau) + fd.div(tau)*u + fd.div(sigma)*v)*fd.dx
 L = - f * v * fd.dx
