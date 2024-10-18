@@ -57,10 +57,11 @@ bc2 = fd.DirichletBC(W.sub(0), fd.as_vector([0., 0.]), "bottom")
 bcs = [bc1, bc2]
 nullspace = fd.VectorSpaceBasis(constant=True)
 
-params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
+params = {'ksp_type': 'gmres', 'pc_type':'asm', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
 
 prob_w = fd.LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = fd.LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
+
 
 
 solver_w.solve()
