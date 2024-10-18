@@ -9,6 +9,7 @@ m = fd.CircleManifoldMesh(20, radius=2)
 height = 0.1
 nlayers = 5
 
+
 mesh = fd.ExtrudedMesh(m, nlayers,
                        layer_height = height/nlayers,
                        extrusion_type='radial')
