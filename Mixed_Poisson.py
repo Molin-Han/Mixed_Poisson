@@ -57,12 +57,32 @@ bc2 = fd.DirichletBC(W.sub(0), fd.as_vector([0., 0.]), "bottom")
 bcs = [bc1, bc2]
 nullspace = fd.VectorSpaceBasis(constant=True)
 
-params = {'ksp_type': 'gmres', 'pc_type':'asm', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
+params = {
+    "mat_type": "matfree",
+    "ksp_type": "gmres",
+    "ksp_converged_reason": None,
+    "ksp_monitor_true_residual": None,
+    # "ksp_view": None,
+    "ksp_atol": 1e-8,
+    "ksp_rtol": 1e-8,
+    "ksp_max_it": 400,
+    "pc_type": "python",
+    "pc_python_type": "firedrake.AssembledPC",
+    "assembled_pc_type": "python",
+    "assembled_pc_python_type": "firedrake.ASMVankaPC",
+    "assembled_pc_vanka_construct_dim": 0,
+    "assembled_pc_vanka_sub_sub_pc_type": "lu",
+    "assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps'
+    # 'ksp_type': 'gmres',
+    #         'pc_type':'python',
+    #         'pc_python_type':'firedrake.ASMStarPC',
+    #         "star_construct_dim": 0,
+    #         'mat_type': 'aij',
+    #         'pc_factor_mat_solver_type': 'mumps'
+    }
 
 prob_w = fd.LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = fd.LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
-
-
 
 solver_w.solve()
 
