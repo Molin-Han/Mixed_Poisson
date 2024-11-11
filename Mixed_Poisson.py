@@ -6,32 +6,38 @@ from firedrake.output import VTKFile
 
 # Extruded Mesh
 m = CircleManifoldMesh(80, radius=2)
-height = pi / 4
+height = 4 * pi
 nlayers = 20
 
-# mesh = ExtrudedMesh(m, nlayers,
-#                        layer_height = height/nlayers,
-#                        extrusion_type='radial')
+mesh = ExtrudedMesh(m, nlayers,
+                       layer_height = height/nlayers,
+                       extrusion_type='radial')
 
 # Create a ExtrudedMesh Hierarchy
-hierarchy = ExtrudedMeshHierarchy(m, height, base_layer=1, refinement_ratio=2, extrusion_type='radial')
-mesh = hierarchy[-1]
+# TODO: is our refinement level 1?
+mh = MeshHierarchy(m, 1)
+hierarchy = ExtrudedMeshHierarchy(mh, height, base_layer=1, refinement_ratio=2, extrusion_type='radial')
+# TODO: Do we need this?
+#mesh = hierarchy[-1]
 # Mixed Finite Element Space
-CG_1 = FiniteElement("CG", interval, 1)
-DG_0 = FiniteElement("DG", interval, 0)
-P1P0 = TensorProductElement(CG_1, DG_0)
-RT_horiz = HDivElement(P1P0)
-P0P1 = TensorProductElement(DG_0, CG_1)
-RT_vert = HDivElement(P0P1)
-RT_e = RT_horiz + RT_vert
-RT = FunctionSpace(mesh, RT_e)
+# CG_1 = FiniteElement("CG", interval, 1)
+# DG_0 = FiniteElement("DG", interval, 0)
+# P1P0 = TensorProductElement(CG_1, DG_0)
+# RT_horiz = HDivElement(P1P0)
+# P0P1 = TensorProductElement(DG_0, CG_1)
+# RT_vert = HDivElement(P0P1)
+# RT_e = RT_horiz + RT_vert
+# RT = FunctionSpace(mesh, RT_e)
 
-horiz_elt = FiniteElement("DG", interval, 0)
-vert_elt = FiniteElement("DG", interval, 0)
-elt = TensorProductElement(horiz_elt, vert_elt)
-DG = FunctionSpace(mesh, elt)
+# horiz_elt = FiniteElement("DG", interval, 0)
+# vert_elt = FiniteElement("DG", interval, 0)
+# elt = TensorProductElement(horiz_elt, vert_elt)
+# DG = FunctionSpace(mesh, elt)
+# W = RT * DG
 
-W = RT * DG
+# TODO: this is not working.
+W = FunctionSpace(m, "RT", 1, vfamily="DG", vdegree=0)
+
 # Test Functions
 sigma, u = TrialFunctions(W)
 tau, v = TestFunctions(W)
@@ -111,8 +117,19 @@ params = {
 #     }
 
 def get_function_space():
-        #return FunctionSpace(mesh, "CG", 1)
-        return FunctionSpace(mesh, "RT", 1, vfamily="R", vdegree=0)
+        # TODO: this is not working.
+        CG_1 = FiniteElement("CG", interval, 1)
+        DG_0 = FiniteElement("DG", interval, 0)
+        P1P0 = TensorProductElement(CG_1, DG_0)
+        RT_horiz = HDivElement(P1P0)
+        P0P1 = TensorProductElement(DG_0, CG_1)
+        RT_vert = HDivElement(P0P1)
+        RT_e = RT_horiz + RT_vert
+        RT = FunctionSpace(mesh, RT_e)
+        # RT = FunctionSpace(mesh, 'RT', 1)
+        R = FunctionSpace(mesh, 'R', 0)
+        # return FunctionSpace(mesh, "RT", 1, vfamily="R", vdegree=0)
+        return RT * R
 def get_coarse_nullspace():
         return VectorSpaceBasis(constant=True)
 def function_callback(): # TODO: Check this!
@@ -130,7 +147,7 @@ appctx = {"get_coarse_operator": function_callback,
 
 # Set the Solver.
 prob_w = LinearVariationalProblem(a, L, sol, bcs=bcs)
-solver_w = LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
+solver_w = LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params, appctx=appctx)
 
 solver_w.solve()
 
