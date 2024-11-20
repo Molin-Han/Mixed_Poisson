@@ -55,6 +55,17 @@ bc2 = DirichletBC(W.sub(0), as_vector([0., 0.]), "bottom")
 bcs = [bc1, bc2]
 nullspace = VectorSpaceBasis(constant=True)
 
+# Set a monitor
+def my_monitor_func(ksp, iteration_number, norm):
+        # e.g. pause execution
+        #breakpoint()
+        its = ksp.getIterationNumber()
+        print(f"The monitor is operating with iteration {its}")
+        # e.g. access the solution vector
+        ksp.getSolution()
+
+
+
 params = {
         'mat_type': 'matfree',
         'ksp_type': 'gmres',
@@ -68,14 +79,14 @@ params = {
                 # "ksp_view": None,
                 # "ksp_atol": 1e-8,
                 # "ksp_rtol": 1e-8,
-                "ksp_max_it": 1,
+                'ksp_max_it': 1,
                 'pc_type': 'python',
-                "pc_python_type": "firedrake.AssembledPC",
-                "assembled_pc_type": "python",
-                "assembled_pc_python_type": "firedrake.ASMVankaPC",
-                "assembled_pc_vanka_construct_dim": 0,
-                "assembled_pc_vanka_sub_sub_pc_type": "lu",
-                "assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps'
+                'pc_python_type': 'firedrake.AssembledPC',
+                'assembled_pc_type': 'python',
+                'assembled_pc_python_type': 'firedrake.ASMVankaPC',
+                'assembled_pc_vanka_construct_dim': 0,
+                'assembled_pc_vanka_sub_sub_pc_type': 'lu',
+                'assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type':'mumps'
                 },
         'mg_coarse': {
                 'ksp_type': 'preonly',
@@ -83,9 +94,13 @@ params = {
                 }
         }
 
+
 # Set the Solver.
 prob_w = LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
+
+# Attach to the PETSc solver (SNES)
+solver_w.snes.ksp.setMonitor(my_monitor_func)
 solver_w.solve()
 sol_u, sol_p = sol.subfunctions
 
