@@ -26,7 +26,6 @@ P0P1 = TensorProductElement(DG_0, CG_1)
 RT_vert = HDivElement(P0P1)
 RT_e = RT_horiz + RT_vert
 RT = FunctionSpace(mesh, RT_e)
-
 DG = FunctionSpace(mesh, 'DG', 0)
 W = RT * DG
 
@@ -54,17 +53,6 @@ bc1 = DirichletBC(W.sub(0), as_vector([0., 0.]), "top")
 bc2 = DirichletBC(W.sub(0), as_vector([0., 0.]), "bottom")
 bcs = [bc1, bc2]
 nullspace = VectorSpaceBasis(constant=True)
-
-# Set a monitor
-def my_monitor_func(ksp, iteration_number, norm):
-        # e.g. pause execution
-        #breakpoint()
-        its = ksp.getIterationNumber()
-        print(f"The monitor is operating with iteration {its}")
-        # e.g. access the solution vector
-        ksp.getSolution()
-
-
 
 params = {
         'mat_type': 'matfree',
@@ -99,9 +87,23 @@ params = {
 prob_w = LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
 
-# Attach to the PETSc solver (SNES)
+sol_final = np.loadtxt('sol_final.out')
+print(len(sol_final),type(sol_final))
+error_list = []
+# Set a monitor
+def my_monitor_func(ksp, iteration_number, norm):
+        print(f"The monitor is operating with current iteration {iteration_number}")
+        sol = ksp.getSolution()
+        if iteration_number < 10 and iteration_number > 5 :
+                np.savetxt(f'sol_{iteration_number}.out', sol)
+        # print(f"The solution at current step is {sol.getArray()}")
+        err = np.linalg.norm(sol_final - sol.getArray(), ord=2)
+        print(f"error norm is {err}")
+        error_list.append(err)
+
 solver_w.snes.ksp.setMonitor(my_monitor_func)
 solver_w.solve()
+print(f"Solution error list is {error_list}")
 sol_u, sol_p = sol.subfunctions
 
 sol_file = VTKFile('sol_MH.pvd')

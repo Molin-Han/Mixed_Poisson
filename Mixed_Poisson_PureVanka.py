@@ -72,7 +72,9 @@ prob_w = fd.LinearVariationalProblem(a, L, sol, bcs=bcs)
 solver_w = fd.LinearVariationalSolver(prob_w, nullspace=nullspace, solver_parameters=params)
 
 solver_w.solve()
-
+sol_final = solver_w.snes.ksp.getSolution().getArray()
+np.savetxt('sol_final.out',sol_final)
+print(len(sol_final), type(sol_final))
 sol_u, sol_p = sol.subfunctions
 
 sol_file = VTKFile('sol_pure_Vanka.pvd')

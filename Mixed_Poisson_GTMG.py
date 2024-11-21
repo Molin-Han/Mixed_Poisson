@@ -94,7 +94,6 @@ def get_function_space():
         RT_vert = HDivElement(P0P1)
         RT_e = RT_horiz + RT_vert
         RT = FunctionSpace(mesh, RT_e)
-        # RT = FunctionSpace(mesh, 'RT', 1)
         R = FunctionSpace(mesh, 'R', 0)
         return FunctionSpace(mesh, "RT", 1, vfamily="R", vdegree=0)
 def get_coarse_nullspace():
