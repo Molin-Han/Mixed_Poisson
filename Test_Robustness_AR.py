@@ -5,11 +5,13 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson_Code import Mixed_Poisson_PureVanka, Mixed_Poisson_MH
 
-height_array = np.arange(10, 4.5, -1.0) * pi / 40
+rate = 60000
+height_array = np.arange(6, 2.0, -1.0) * pi / rate
+#height_array = np.array([1.0]) * pi /40
 horiz_num = 80
 nlayers = 20
 radius = 2
-fig,ax = plt.subplots()
+fig, ax = plt.subplots()
 ax.set_title("The solution error")
 
 
@@ -31,13 +33,13 @@ for i in height_array:
     equ_MH.solve()
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for ar = {ar}")
-    error = np.loadtxt(f'err_{ar}.out')
-    x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"AR={ar}")
-    plt.legend()
-    plt.xlabel("its")
-    plt.ylabel("log_error")
-    plt.savefig(f"error{ar}.png")
+    # error = np.loadtxt(f'err_{ar}.out')
+    # x = np.arange(len(error))
+    # ax.semilogy(x, error, label=f"AR={ar}")
+    # plt.legend()
+    # plt.xlabel("its")
+    # plt.ylabel("log_error")
+    # plt.savefig(f"error{ar}.png")
 
 
 
@@ -50,4 +52,4 @@ for ratio in ar_list:
     plt.ylabel("log_error")
     plt.savefig(f"error_final{ratio}.png")
     
-plt.savefig("error_final.png")
+plt.savefig(f"error_final_ar_{ratio}.png")

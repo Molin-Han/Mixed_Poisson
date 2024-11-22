@@ -8,6 +8,8 @@ from firedrake.output import VTKFile
 class MH:
         def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2):
                 self.ar = height/(2 * pi * radius)
+                self.dx = 2 * pi * radius / horiz_num
+                self.dz = height / nlayers
                 print(f"The aspect ratio is {self.ar}")
                 m = CircleManifoldMesh(horiz_num, radius=radius)
                 # Extruded Mesh
@@ -92,7 +94,7 @@ class MH:
         def solve(self):
 
                 self.sol_final = np.loadtxt(f'sol_final_{self.ar}.out')
-                print(f"Our solution array is of length {len(self.sol_final)}, and is a {type(self.sol_final)}")
+                #print(f"Our solution array is of length {len(self.sol_final)}, and is a {type(self.sol_final)}")
                 error_list = []
 
                 # Set a monitor
@@ -108,8 +110,13 @@ class MH:
 
                 self.solver_w.snes.ksp.setMonitor(my_monitor_func)
                 self.solver_w.solve()
-                print(f"Solution error list is {error_list}")
-                np.savetxt(f'err_{self.ar}.out', error_list)
+                #print(f"Solution error list is {error_list}")
+                # test for the aspect ratio
+                #np.savetxt(f'err_{self.ar}.out', error_list)
+                # test for the different dx
+                np.savetxt(f'err_dx_{self.dx}.out', error_list)
+                # test for the different dz
+                #np.savetxt(f'err_dz{self.dz}.out', error_list)
 
 
         def write(self):
@@ -122,7 +129,7 @@ class MH:
 if __name__ == "__main__":
 
         horiz_num = 80
-        height = pi / 40
+        height = pi / 400
         nlayers = 20
         radius = 2
 

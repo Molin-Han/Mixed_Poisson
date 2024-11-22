@@ -81,7 +81,7 @@ class PureVanka:
         self.solver_w.solve()
         self.sol_final = self.solver_w.snes.ksp.getSolution().getArray()
         np.savetxt(f'sol_final_{self.ar}.out',self.sol_final)
-        print(f"Our solution array is of length {len(self.sol_final)}, and is a {type(self.sol_final)}")
+        #print(f"Our solution array is of length {len(self.sol_final)}, and is a {type(self.sol_final)}")
 
     def write(self):
         sol_u, sol_p = self.sol.subfunctions
@@ -91,7 +91,7 @@ class PureVanka:
 if __name__ == "__main__":
 
     horiz_num = 80
-    height = fd.pi / 40
+    height = fd.pi / 400
     nlayers = 20
     radius = 2
 
