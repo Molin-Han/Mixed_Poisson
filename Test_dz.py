@@ -5,23 +5,24 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson_Code import Mixed_Poisson_PureVanka, Mixed_Poisson_MH
 
-rate = 60000
-height_array = np.arange(10, 2.0, -1.0) * pi / rate
-#height_array = np.array([1.0]) * pi /40
+height = pi / 40
 horiz_num = 80
-nlayers = 20
+nlayers_array = np.arange(2, 7, 2) * 20
 radius = 2
 fig, ax = plt.subplots()
-ax.set_title("The solution error")
+ax.set_title("The solution error for different dx")
 
+dz_list = []
 
-ar_list = []
-for i in height_array:
+for i in nlayers_array:
     print(i)
-    height = i
+    nlayers = i
+    dz = height / nlayers
     ar = height/ (2 * pi * radius)
     print(f"Aspect ratio is {ar}")
-    ar_list.append(ar)
+    print(f"The dz is {dz}")
+    dz_list.append(dz)
+
     equ_PV = Mixed_Poisson_PureVanka.PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
     equ_PV.build_f()
     equ_PV.build_LinearVariationalSolver()
@@ -32,24 +33,18 @@ for i in height_array:
     equ_MH.build_LinearVariationalSolver()
     equ_MH.solve()
 
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for ar = {ar}")
-    # error = np.loadtxt(f'err_{ar}.out')
-    # x = np.arange(len(error))
-    # ax.semilogy(x, error, label=f"AR={ar}")
-    # plt.legend()
-    # plt.xlabel("its")
-    # plt.ylabel("log_error")
-    # plt.savefig(f"error{ar}.png")
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for dz = {dz}")
 
-
-
-for ratio in ar_list:
-    error = np.loadtxt(f'err_{ratio}.out')
+i = 0
+for dz in dz_list:
+    nlayer = nlayers_array[i]
+    i += 1
+    error = np.loadtxt(f'err_dz_{dz}.out')
     x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"AR={ratio}")
+    ax.semilogy(x, error, label=f"nlayer={nlayer}")
     plt.legend()
     plt.xlabel("its")
     plt.ylabel("log_error")
-    plt.savefig(f"error_final{ratio}.png")
-    
-plt.savefig(f"error_final_ar_{ratio}.png")
+    plt.savefig(f"error_final{dz}.png")
+
+plt.savefig(f"error_final_dz_{dz}.png")

@@ -6,7 +6,7 @@ from firedrake.output import VTKFile
 from Mixed_Poisson_Code import Mixed_Poisson_PureVanka, Mixed_Poisson_MH
 
 height = pi / 40
-horiz_array = np.arange(2, 11, 2) * 50
+horiz_array = np.arange(2, 11, 2) * 10
 nlayers = 20
 radius = 2
 fig, ax = plt.subplots()
@@ -33,11 +33,13 @@ for i in horiz_array:
     equ_MH.solve()
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for dx = {dx}")
-
+i = 0
 for dx in dx_list:
+    horiz = horiz_array[i]
+    i += 1
     error = np.loadtxt(f'err_dx_{dx}.out')
     x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"dx={dx}")
+    ax.semilogy(x, error, label=f"horiz={horiz}")
     plt.legend()
     plt.xlabel("its")
     plt.ylabel("log_error")

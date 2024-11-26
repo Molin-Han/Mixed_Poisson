@@ -80,8 +80,8 @@ class MH:
                                 'assembled_pc_type': 'python',
                                 'assembled_pc_python_type': 'firedrake.ASMVankaPC',
                                 'assembled_pc_vanka_construct_dim': 0,
-                                'assembled_pc_vanka_sub_sub_pc_type': 'lu',
-                                'assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type':'mumps'
+                                'assembled_pc_vanka_sub_sub_pc_type': 'lu'
+                                #'assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type':'mumps'
                                 },
                         'mg_coarse': {
                                 'ksp_type': 'preonly',
@@ -114,9 +114,9 @@ class MH:
                 # test for the aspect ratio
                 #np.savetxt(f'err_{self.ar}.out', error_list)
                 # test for the different dx
-                np.savetxt(f'err_dx_{self.dx}.out', error_list)
+                #np.savetxt(f'err_dx_{self.dx}.out', error_list)
                 # test for the different dz
-                #np.savetxt(f'err_dz{self.dz}.out', error_list)
+                np.savetxt(f'err_dz_{self.dz}.out', error_list)
 
 
         def write(self):
