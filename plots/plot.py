@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import Mixed_Poisson_PureVanka, Mixed_Poisson_MH
+from Mixed_Poisson_Code import MH, PureVanka
 
 
 

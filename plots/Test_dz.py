@@ -3,7 +3,8 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import Mixed_Poisson_PureVanka, Mixed_Poisson_MH
+from Mixed_Poisson_Code import MH
+from Mixed_Poisson_Code import PureVanka
 
 height = pi / 40
 horiz_num = 80
@@ -23,12 +24,12 @@ for i in nlayers_array:
     print(f"The dz is {dz}")
     dz_list.append(dz)
 
-    equ_PV = Mixed_Poisson_PureVanka.PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    equ_PV = PureVanka.PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
     equ_PV.build_f()
     equ_PV.build_LinearVariationalSolver()
     equ_PV.solve()
 
-    equ_MH = Mixed_Poisson_MH.MH(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    equ_MH = MH.MH(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
     equ_MH.build_f()
     equ_MH.build_LinearVariationalSolver()
     equ_MH.solve()

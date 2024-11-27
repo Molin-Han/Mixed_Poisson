@@ -1,3 +1,3 @@
-from Mixed_Poisson_Code.Mixed_Poisson_PureVanka import PureVanka
-from Mixed_Poisson_Code.Mixed_Poisson_MH import MH
+from Mixed_Poisson_Code.PureVanka import PureVanka
+from Mixed_Poisson_Code.MH import MH
 
