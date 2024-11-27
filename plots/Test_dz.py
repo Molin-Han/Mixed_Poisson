@@ -3,8 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import MH
-from Mixed_Poisson_Code import PureVanka
+from Mixed_Poisson_Code import MH, PureVanka, MH_Monitor
 
 height = pi / 40
 horiz_num = 80

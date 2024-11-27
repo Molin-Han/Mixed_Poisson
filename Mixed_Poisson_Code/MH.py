@@ -91,32 +91,9 @@ class MH:
                 self.prob_w = LinearVariationalProblem(self.a, self.L, self.sol, bcs=self.bcs)
                 self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params)
 
+        #TODO: No need to set monitor here.
         def solve(self):
-
-                self.sol_final = np.loadtxt(f'sol_final_{self.ar}.out')
-                #print(f"Our solution array is of length {len(self.sol_final)}, and is a {type(self.sol_final)}")
-                error_list = []
-
-                # Set a monitor
-                def my_monitor_func(ksp, iteration_number, norm):
-                        #print(f"The monitor is operating with current iteration {iteration_number}")
-                        sol = ksp.buildSolution()
-                        # if iteration_number < 10 and iteration_number > 5 :
-                        #         np.savetxt(f'sol_{self.ar}_{iteration_number}.out', sol)
-                        # print(f"The solution at current step is {sol.getArray()}")
-                        err = np.linalg.norm(self.sol_final - sol.getArray(), ord=2)
-                        #print(f"error norm is {err}")
-                        error_list.append(err)
-
-                self.solver_w.snes.ksp.setMonitor(my_monitor_func)
                 self.solver_w.solve()
-                #print(f"Solution error list is {error_list}")
-                # test for the aspect ratio
-                #np.savetxt(f'err_{self.ar}.out', error_list)
-                # test for the different dx
-                #np.savetxt(f'err_dx_{self.dx}.out', error_list)
-                # test for the different dz
-                np.savetxt(f'err_dz_{self.dz}.out', error_list)
 
 
         def write(self):

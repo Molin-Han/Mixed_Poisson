@@ -5,39 +5,10 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
 
-class MH_Solver:
-        def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, monitor=False):
-                self.ar = height/(2 * pi * radius)
-                self.dx = 2 * pi * radius / horiz_num
-                self.dz = height / nlayers
-                print(f"The aspect ratio is {self.ar}")
-                self.monitor = monitor
-                m = CircleManifoldMesh(horiz_num, radius=radius)
-                # Extruded Mesh
-                self.mesh = ExtrudedMesh(m, nlayers,
-                                layer_height = height/nlayers,
-                                extrusion_type='radial')
-
-                # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
-                self.mh = MeshHierarchy(m, refinement_levels=0)
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
-                # Mixed Finite Element Space
-                CG_1 = FiniteElement("CG", interval, 1)
-                DG_0 = FiniteElement("DG", interval, 0)
-                P1P0 = TensorProductElement(CG_1, DG_0)
-                RT_horiz = HDivElement(P1P0)
-                P0P1 = TensorProductElement(DG_0, CG_1)
-                RT_vert = HDivElement(P0P1)
-                RT_e = RT_horiz + RT_vert
-                RT = FunctionSpace(self.mesh, RT_e)
-                DG = FunctionSpace(self.mesh, 'DG', 0)
-                self.W = RT * DG
-
-                # Test Functions
-                self.sigma, self.u = TrialFunctions(self.W)
-                self.tau, self.v = TestFunctions(self.W)
-
-                self.x, self.y = SpatialCoordinate(self.mesh)
+class MH_Monitor:
+# TODO: need to rethink this monitor option.
+        def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2):
+                super().__init__(height= height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
 
         def build_f(self):
                 # Some known function f

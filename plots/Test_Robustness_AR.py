@@ -3,8 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import MH
-from Mixed_Poisson_Code import PureVanka
+from Mixed_Poisson_Code import MH, PureVanka, MH_Monitor
 
 rate = 60000
 height_array = np.arange(10, 2.0, -1.0) * pi / rate
