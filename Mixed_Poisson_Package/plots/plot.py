@@ -3,9 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import MH, PureVanka
-
-
+from Mixed_Poisson import MH, Solver_MH
 
 height_array = np.arange(10, 6.0, -1.0) * pi / 20
 horiz_num = 80

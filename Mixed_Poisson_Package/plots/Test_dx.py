@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson_Code import MH, PureVanka, MH_Monitor
+from Mixed_Poisson import MH, Solver_MH
 
 height = pi / 40
 horiz_array = np.arange(2, 11, 2) * 10
@@ -13,6 +13,7 @@ fig, ax = plt.subplots()
 ax.set_title("The solution error for different dx")
 
 dx_list = []
+
 for i in horiz_array:
     print(i)
     horiz_num = i
@@ -22,15 +23,17 @@ for i in horiz_array:
     print(f"The dx is {dx}")
     dx_list.append(dx)
 
-    equ_PV = PureVanka.PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
-    equ_PV.build_f()
-    equ_PV.build_LinearVariationalSolver()
-    equ_PV.solve()
-
-    equ_MH = MH.MH(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    equ_MH = MH.PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
     equ_MH.build_f()
+    equ_MH.build_params()
     equ_MH.build_LinearVariationalSolver()
-    equ_MH.solve()
+    equ_MH.solve(monitor=True)
+
+    equ_monitor = Solver_MH.MH_Monitor(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    equ_monitor.build_f()
+    equ_monitor.build_params()
+    equ_monitor.build_LinearVariationalSolver()
+    equ_monitor.solve(monitor=True, xtest=True)
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for dx = {dx}")
 i = 0
@@ -43,6 +46,6 @@ for dx in dx_list:
     plt.legend()
     plt.xlabel("its")
     plt.ylabel("log_error")
-    plt.savefig(f"error_final{dx}.png")
+    #plt.savefig(f"error_final{dx}.png")
 
 plt.savefig(f"error_final_dx_{dx}.png")
