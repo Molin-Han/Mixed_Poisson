@@ -12,6 +12,7 @@ class PoissonMeshHierarchy(Poisson):
                 # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
                 self.mh = MeshHierarchy(self.m, refinement_levels=0)
                 self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
+                # self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
 
 
         def build_params(self):
@@ -43,7 +44,7 @@ class PoissonMeshHierarchy(Poisson):
                                 'pc_type': 'lu'
                                 }
                         }
-                
+
         def solve(self, monitor=False):
                 self.solver_w.solve()
                 if monitor:
@@ -56,7 +57,6 @@ class PoissonMeshHierarchy(Poisson):
                 sol_file.write(sol_u, sol_p)        
 
 
-
 if __name__ == "__main__":
 
         horiz_num = 80
@@ -64,9 +64,10 @@ if __name__ == "__main__":
         nlayers = 20
         radius = 2
 
-        equ = MH(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+        equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
         equ.build_f()
         equ.build_params()
-        equ.build_LinearVariationalSolver()
+        #equ.build_LinearVariationalSolver()
+        equ.build_NonlinearVariationalSolver()
         equ.solve()
-        # equ.write()
+        equ.write()

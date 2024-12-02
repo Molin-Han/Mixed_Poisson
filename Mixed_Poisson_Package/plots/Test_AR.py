@@ -26,12 +26,14 @@ for i in height_array:
     equ_MH.build_f()
     equ_MH.build_params()
     equ_MH.build_LinearVariationalSolver()
+    # equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=True)
 
     equ_monitor = Solver_MH.MH_Monitor(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
     equ_monitor.build_f()
     equ_monitor.build_params()
     equ_monitor.build_LinearVariationalSolver()
+    # equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, artest=True)
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for ar = {ar}")

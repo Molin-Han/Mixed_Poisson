@@ -12,6 +12,7 @@ class MH_Monitor(Poisson):
                 # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
                 self.mh = MeshHierarchy(self.m, refinement_levels=0)
                 self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
+                # self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
 
         def build_params(self):
                 self.params = {
@@ -77,7 +78,6 @@ class MH_Monitor(Poisson):
                                 np.savetxt(f'err_dz_{self.dz}.out', error_list)
                 else:
                         self.solver_w.solve()
-
 
         def write(self):
                 sol_u, sol_p = self.sol.subfunctions
