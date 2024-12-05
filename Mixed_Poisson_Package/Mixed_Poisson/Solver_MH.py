@@ -59,7 +59,7 @@ class MH_Monitor(Poisson):
                         def my_monitor_func(ksp, iteration_number, norm):
                                 #print(f"The monitor is operating with current iteration {iteration_number}")
                                 sol = ksp.buildSolution()
-                                # TODO: Use relative error here
+                                # TODO: Used relative error here
                                 err = np.linalg.norm(self.sol_final - sol.getArray(), ord=2) / np.linalg.norm(self.sol_final)
                                 #print(f"error norm is {err}")
                                 error_list.append(err)
