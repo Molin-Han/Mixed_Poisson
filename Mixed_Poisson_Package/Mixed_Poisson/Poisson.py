@@ -11,11 +11,11 @@ class Poisson:
         self.dz = height / nlayers
         print(f"The aspect ratio is {self.ar}")
 
-        self.m = CircleManifoldMesh(horiz_num, radius=radius)
-        # self.m = UnitIntervalMesh(horiz_num)
+        # self.m = CircleManifoldMesh(horiz_num, radius=radius)
+        self.m = UnitIntervalMesh(horiz_num)
         # Extruded Mesh
-        self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
-        # self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
+        # self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
+        self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
 
         # Mixed Finite Element Space
         CG_1 = FiniteElement("CG", interval, 1)
@@ -44,7 +44,10 @@ class Poisson:
         # Some known function f
         DG = FunctionSpace(self.mesh, 'DG', 0)
         theta = atan2(self.y,self.x)
-        self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
+        pcg = PCG64(seed=123456789)
+        rg = Generator(pcg)
+        self.f = rg.normal(DG, 1.0, 2.0)
+        # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
         One = Function(DG).assign(1.0)
         area = assemble(One*dx)
         f_int = assemble(self.f*dx)
