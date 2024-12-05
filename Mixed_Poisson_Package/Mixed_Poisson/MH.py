@@ -11,6 +11,7 @@ class PoissonMeshHierarchy(Poisson):
                 super().__init__(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
                 # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
                 self.mh = MeshHierarchy(self.m, refinement_levels=0)
+                # vertical lumping space
                 self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
                 # self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
 
