@@ -13,13 +13,8 @@ class Poisson:
         self.dz = height / nlayers
         print(f"The aspect ratio is {self.ar}")
 
-<<<<<<< HEAD
-        # self.m = CircleManifoldMesh(horiz_num, radius=radius)
-        self.m = UnitIntervalMesh(horiz_num)
-=======
         # self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle')
         self.m = UnitIntervalMesh(horiz_num, name='interval')
->>>>>>> stiffer_f
         # Extruded Mesh
         # self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
         self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
