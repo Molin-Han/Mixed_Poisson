@@ -7,12 +7,14 @@ from Mixed_Poisson.Poisson import Poisson
 
 
 class PoissonMeshHierarchy(Poisson):
-        def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2):
-                super().__init__(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+        def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
+                super().__init__(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
                 # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
                 self.mh = MeshHierarchy(self.m, refinement_levels=0)
-                # self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
+                if mesh == "interval":
+                        self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
+                if mesh == "circle":
+                        self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
 
 
         def build_params(self):
@@ -62,10 +64,12 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
+        mesh = "circle"
+        option = "regular"
 
-        equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+        equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
         print(f"The calculation is down in a {equ.m.name} mesh.")
-        equ.build_f()
+        equ.build_f(option=option)
         equ.build_params()
         equ.build_LinearVariationalSolver()
         #equ.build_NonlinearVariationalSolver()

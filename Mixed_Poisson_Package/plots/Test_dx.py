@@ -9,6 +9,8 @@ height = pi / 40
 horiz_array = np.arange(2, 11, 2) * 10
 nlayers = 20
 radius = 2
+mesh = "circle"
+option = "regular"
 fig, ax = plt.subplots()
 ax.set_title("The solution error for different dx")
 
@@ -23,14 +25,14 @@ for i in horiz_array:
     print(f"The dx is {dx}")
     dx_list.append(dx)
 
-    equ_MH = MH.PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
-    equ_MH.build_f()
+    equ_MH = MH.PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_MH.build_f(option=option)
     equ_MH.build_params()
     equ_MH.build_LinearVariationalSolver()
     equ_MH.solve(monitor=True)
 
-    equ_monitor = Solver_MH.MH_Monitor(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
-    equ_monitor.build_f()
+    equ_monitor = Solver_MH.MH_Monitor(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_monitor.build_f(option=option)
     equ_monitor.build_params()
     equ_monitor.build_LinearVariationalSolver()
     equ_monitor.solve(monitor=True, xtest=True)

@@ -5,19 +5,24 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
 class Poisson:
-    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2):
+    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
+        '''
+        mesh : interval or circle to be extruded.
+        '''
         self.height = height
         self.rad = radius
         self.ar = height/(2 * pi * radius)
         self.dx = 2 * pi * radius / horiz_num
         self.dz = height / nlayers
         print(f"The aspect ratio is {self.ar}")
-
-        # self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle')
-        self.m = UnitIntervalMesh(horiz_num, name='interval')
+        
         # Extruded Mesh
-        # self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
-        self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
+        if mesh == "interval":
+            self.m = UnitIntervalMesh(horiz_num, name='interval')
+            self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
+        if mesh == "circle":
+            self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle')
+            self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
 
         # Mixed Finite Element Space
         CG_1 = FiniteElement("CG", interval, 1)
@@ -42,22 +47,32 @@ class Poisson:
         self.x, self.y = SpatialCoordinate(self.mesh)
 
     # TODO: test with stiffer f.
-    def build_f(self):
-        # Some known function f
+    def build_f(self, option= "regular"):
+        '''
+        option : regular or stiff or random
+        '''
         DG = FunctionSpace(self.mesh, 'DG', 0)
         theta = atan2(self.y,self.x)
-        pcg = PCG64(seed=123456789)
-        rg = Generator(pcg)
-        self.f = rg.normal(DG, 1.0, 2.0)
-        # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
-        # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2) * (self.y -self.rad) / self.height))
-        self.f = Function(DG).interpolate(exp(-pow(theta, 2)*self.y))
-        #self.f = Function(DG).interpolate(exp(-pow(theta, 2)))
+        if option == "regular":
+            self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
+
+        elif option == "stiff":
+            # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2) * (self.y -self.rad) / self.height))
+            self.f = Function(DG).interpolate(exp(-pow(theta, 2)*self.y))
+            #self.f = Function(DG).interpolate(exp(-pow(theta, 2)))
+
+        elif option == "random":
+            pcg = PCG64(seed=123456789)
+            rg = Generator(pcg)
+            self.f = rg.normal(DG, 1.0, 2.0)
+            # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
+        else:
+            raise NotImplementedError("this option is not available. Please choose from regular, stiff or random.")
         One = Function(DG).assign(1.0)
         area = assemble(One*dx)
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
-    
+
     def build_params(self):
         self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
 
@@ -75,7 +90,7 @@ class Poisson:
         self.prob_w = LinearVariationalProblem(self.a, self.L, self.sol, bcs=self.bcs)
         self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params)
 
-    def build_NonlinearVariationalSolver(self):
+    def build_NonlinearVariationalSolver(self): # FIXME: this has a bug.
         # Variational Problem
         self.F = (dot(self.sig_sol, self.tau) + div(self.tau)*self.u_sol + div(self.sig_sol)*self.v)*dx + self.f * self.v * dx
 
