@@ -23,6 +23,7 @@ for i in height_array:
     print(f"Aspect ratio is {ar}")
     ar_list.append(ar)
     equ_MH = MH.PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    print(f"!!!!The calculation is down in a {equ_MH.m.name} mesh.")
     equ_MH.build_f()
     equ_MH.build_params()
     equ_MH.build_LinearVariationalSolver()

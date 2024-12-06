@@ -58,13 +58,13 @@ class PoissonMeshHierarchy(Poisson):
 
 
 if __name__ == "__main__":
-
         horiz_num = 80
-        height = pi / 5
+        height = pi / 20
         nlayers = 20
         radius = 2
 
         equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+        print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f()
         equ.build_params()
         equ.build_LinearVariationalSolver()
