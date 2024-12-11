@@ -47,7 +47,7 @@ class Poisson:
         self.x, self.y = SpatialCoordinate(self.mesh)
 
     # TODO: test with stiffer f.
-    def build_f(self, option= "regular"):
+    def build_f(self, option="regular"):
         '''
         option : regular or stiff or random
         '''
@@ -72,6 +72,7 @@ class Poisson:
         area = assemble(One*dx)
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
+        print("!!!!!!!!!!!!!!!!!!!", assemble(self.f*dx))
 
     def build_params(self):
         self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
@@ -88,12 +89,12 @@ class Poisson:
 
         self.nullspace = VectorSpaceBasis(constant=True)
         self.prob_w = LinearVariationalProblem(self.a, self.L, self.sol, bcs=self.bcs)
-        self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params)
+        self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params, options_prefix='mixed')
 
     def build_NonlinearVariationalSolver(self): # FIXME: this has a bug.
         # Variational Problem
         self.F = (dot(self.sig_sol, self.tau) + div(self.tau)*self.u_sol + div(self.sig_sol)*self.v)*dx + self.f * self.v * dx
-
+        self.F += dot(self.v, self.u_sol) * dx
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
         bc2 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "bottom")
@@ -101,5 +102,7 @@ class Poisson:
 
         self.nullspace = VectorSpaceBasis(constant=True)
         self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
-        self.solver_w = NonlinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params)
+        self.solver_w = NonlinearVariationalSolver(self.prob_w,
+                                                    # nullspace=self.nullspace,
+                                                    solver_parameters=self.params)
 

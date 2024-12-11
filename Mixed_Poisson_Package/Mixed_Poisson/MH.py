@@ -21,17 +21,18 @@ class PoissonMeshHierarchy(Poisson):
                 self.params = {
                         'mat_type': 'matfree',
                         'ksp_type': 'gmres',
-                        #'ksp_monitor': None,
+                        'snes_monitor': None,
+                        # 'ksp_monitor': None,
                         "ksp_monitor_true_residual": None,
                         'pc_type': 'mg',
                         'pc_mg_type': 'full',
+                        "ksp_converged_reason": None,
                         'mg_levels': {
                                 'ksp_type': 'richardson',
-                                # "ksp_converged_reason": None,
                                 # "ksp_monitor_true_residual": None,
                                 # "ksp_view": None,
-                                # "ksp_atol": 1e-8,
-                                # "ksp_rtol": 1e-8,
+                                "ksp_atol": 1e-50,
+                                "ksp_rtol": 1e-10,
                                 'ksp_max_it': 1,
                                 'pc_type': 'python',
                                 'pc_python_type': 'firedrake.AssembledPC',
@@ -64,14 +65,14 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
-        mesh = "circle"
+        mesh = "interval"
         option = "regular"
 
         equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         equ.build_params()
-        equ.build_LinearVariationalSolver()
-        #equ.build_NonlinearVariationalSolver()
+        #equ.build_LinearVariationalSolver()
+        equ.build_NonlinearVariationalSolver()
         equ.solve()
         equ.write()
