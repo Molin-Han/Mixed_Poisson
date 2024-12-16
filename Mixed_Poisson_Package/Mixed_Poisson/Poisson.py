@@ -42,11 +42,10 @@ class Poisson:
 
         # Solution Functions
         self.sol = Function(self.W) # solution in mixed space
-        self.sig_sol, self.u_sol = split(self.sol) #TODO: this is for the NonlinearVariationalSolver.
+        self.sig_sol, self.u_sol = split(self.sol)
 
         self.x, self.y = SpatialCoordinate(self.mesh)
 
-    # TODO: test with stiffer f.
     def build_f(self, option="regular"):
         '''
         option : regular or stiff or random
@@ -72,7 +71,6 @@ class Poisson:
         area = assemble(One*dx)
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
-        print("!!!!!!!!!!!!!!!!!!!", assemble(self.f*dx))
 
     def build_params(self):
         self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
@@ -85,24 +83,43 @@ class Poisson:
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
         bc2 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "bottom")
-        self.bcs = [bc1, bc2]
+        bc3 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "on_boundary")
+        self.bcs = [bc1, bc2, bc3]
 
-        self.nullspace = VectorSpaceBasis(constant=True)
+        v_basis = VectorSpaceBasis(constant=True) #pressure field nullspace
+        self.nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), v_basis])
+        trans_null = VectorSpaceBasis(constant=True)
+        self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
         self.prob_w = LinearVariationalProblem(self.a, self.L, self.sol, bcs=self.bcs)
-        self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace, solver_parameters=self.params, options_prefix='mixed')
+        self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace,
+                                                transpose_nullspace=self.trans_nullspace, 
+                                                solver_parameters=self.params, 
+                                                options_prefix='mixed_linear')
 
     def build_NonlinearVariationalSolver(self): # FIXME: this has a bug.
         # Variational Problem
-        self.F = (dot(self.sig_sol, self.tau) + div(self.tau)*self.u_sol + div(self.sig_sol)*self.v)*dx + self.f * self.v * dx
-        self.F += dot(self.v, self.u_sol) * dx
+        tau = self.tau
+        sig = self.sig_sol
+        f = self.f
+        u = self.u_sol
+        v = self.v
+        self.F = (inner(sig, tau) + div(tau)*u + div(sig)*v)*dx + f * v * dx
+
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
         bc2 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "bottom")
-        self.bcs = [bc1, bc2]
+        bc3 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "on_boundary")
+        self.bcs = [bc1, bc2, bc3]
 
-        self.nullspace = VectorSpaceBasis(constant=True)
+        v_basis = VectorSpaceBasis(constant=True) #pressure field nullspace
+        self.nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), v_basis])
+        trans_null = VectorSpaceBasis(constant=True)
+        self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
+
         self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
         self.solver_w = NonlinearVariationalSolver(self.prob_w,
-                                                    # nullspace=self.nullspace,
-                                                    solver_parameters=self.params)
+                                                    nullspace=self.nullspace,
+                                                    transpose_nullspace=self.trans_nullspace,
+                                                    solver_parameters=self.params, 
+                                                    options_prefix='mixed_nonlinear')
 

@@ -22,11 +22,13 @@ class PoissonMeshHierarchy(Poisson):
                         'mat_type': 'matfree',
                         'ksp_type': 'gmres',
                         'snes_monitor': None,
+                        # 'snes_type':'ksponly',
                         # 'ksp_monitor': None,
-                        "ksp_monitor_true_residual": None,
+                        # "ksp_monitor_true_residual": None,
                         'pc_type': 'mg',
                         'pc_mg_type': 'full',
                         "ksp_converged_reason": None,
+                        "snes_converged_reason": None,
                         'mg_levels': {
                                 'ksp_type': 'richardson',
                                 # "ksp_monitor_true_residual": None,
@@ -48,6 +50,12 @@ class PoissonMeshHierarchy(Poisson):
                                 }
                         }
 
+        def params_direct(self):
+                self.params = {'ksp_type': 'gmres','snes_monitor': None,
+                                # 'snes_type':'ksponly', 
+                                "snes_converged_reason": None,
+                                'ksp_monitor': None,'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
+
         def solve(self, monitor=False):
                 self.solver_w.solve()
                 if monitor:
@@ -65,14 +73,16 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
-        mesh = "interval"
+        mesh = "circle"
         option = "regular"
 
         equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         equ.build_params()
-        #equ.build_LinearVariationalSolver()
+        # equ.params_direct()
+        # equ.build_LinearVariationalSolver()
         equ.build_NonlinearVariationalSolver()
         equ.solve()
+        print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
         equ.write()
