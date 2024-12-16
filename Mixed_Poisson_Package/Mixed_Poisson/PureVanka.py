@@ -8,15 +8,17 @@ from Mixed_Poisson.Poisson import Poisson
 
 class PureVanka(Poisson):
 
-    def __init__(self, height=fd.pi / 40, nlayers=20, horiz_num=80, radius=2):
-        super().__init__(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
+    def __init__(self, height=fd.pi / 40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
+        super().__init__(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
 
     def build_params(self):
         self.params = {
             "mat_type": "matfree",
             "ksp_type": "gmres",
+            'snes_monitor': None,
             "ksp_converged_reason": None,
-            "ksp_monitor_true_residual": None,
+            "snes_converged_reason": None,
+            # "ksp_monitor_true_residual": None,
             # "ksp_view": None,
             "ksp_atol": 1e-8,
             "ksp_rtol": 1e-8,
@@ -44,10 +46,13 @@ if __name__ == "__main__":
     height = fd.pi / 400
     nlayers = 20
     radius = 2
+    mesh = "circle"
+    option = "regular"
 
-    equ = PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius)
-    equ.build_f()
+    equ = PureVanka(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ.build_f(option=option)
     equ.build_params()
-    equ.build_LinearVariationalSolver()
+    equ.build_NonlinearVariationalSolver()
     equ.solve()
+    print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
     # equ.write()
