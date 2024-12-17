@@ -37,12 +37,12 @@ class Poisson:
         self.W = RT * DG
 
         # Test Functions
-        self.sigma, self.u = TrialFunctions(self.W)
+        self.u, self.p = TrialFunctions(self.W)
         self.tau, self.v = TestFunctions(self.W)
 
         # Solution Functions
         self.sol = Function(self.W) # solution in mixed space
-        self.sig_sol, self.u_sol = split(self.sol)
+        self.u_sol, self.p_sol = split(self.sol)
 
         self.x, self.y = SpatialCoordinate(self.mesh)
 
@@ -77,7 +77,7 @@ class Poisson:
 
     def build_LinearVariationalSolver(self):
         # Variational Problem
-        self.a = (dot(self.sigma, self.tau) + div(self.tau)*self.u + div(self.sigma)*self.v)*dx
+        self.a = (dot(self.u, self.tau) + div(self.tau)*self.p + div(self.u)*self.v)*dx
         self.L = - self.f * self.v * dx
 
         # Boundary conditions
@@ -90,20 +90,21 @@ class Poisson:
         self.nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), v_basis])
         trans_null = VectorSpaceBasis(constant=True)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
+
         self.prob_w = LinearVariationalProblem(self.a, self.L, self.sol, bcs=self.bcs)
         self.solver_w = LinearVariationalSolver(self.prob_w, nullspace=self.nullspace,
                                                 transpose_nullspace=self.trans_nullspace, 
                                                 solver_parameters=self.params, 
                                                 options_prefix='mixed_linear')
 
-    def build_NonlinearVariationalSolver(self): # FIXME: this has a bug.
+    def build_NonlinearVariationalSolver(self):
         # Variational Problem
-        tau = self.tau
-        sig = self.sig_sol
-        f = self.f
         u = self.u_sol
+        p = self.p_sol
+        tau = self.tau
         v = self.v
-        self.F = (inner(sig, tau) + div(tau)*u + div(sig)*v)*dx + f * v * dx
+        f = self.f
+        self.F = (inner(u, tau) + div(tau)*p + div(u)*v)*dx + f * v * dx
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")

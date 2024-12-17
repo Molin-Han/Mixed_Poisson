@@ -73,7 +73,7 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
-        mesh = "circle"
+        mesh = "interval"
         option = "regular"
 
         equ = PoissonMeshHierarchy(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
