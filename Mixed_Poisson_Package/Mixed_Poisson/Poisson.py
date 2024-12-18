@@ -38,7 +38,7 @@ class Poisson:
 
         # Test Functions
         self.u, self.p = TrialFunctions(self.W)
-        self.tau, self.v = TestFunctions(self.W)
+        self.v, self.q = TestFunctions(self.W)
 
         # Solution Functions
         self.sol = Function(self.W) # solution in mixed space
@@ -77,8 +77,8 @@ class Poisson:
 
     def build_LinearVariationalSolver(self):
         # Variational Problem
-        self.a = (dot(self.u, self.tau) + div(self.tau)*self.p + div(self.u)*self.v)*dx
-        self.L = - self.f * self.v * dx
+        self.a = (dot(self.u, self.v) + div(self.v)*self.p + div(self.u)*self.q)*dx
+        self.L = - self.f * self.q * dx
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
@@ -101,10 +101,10 @@ class Poisson:
         # Variational Problem
         u = self.u_sol
         p = self.p_sol
-        tau = self.tau
+        q = self.q
         v = self.v
         f = self.f
-        self.F = (inner(u, tau) + div(tau)*p + div(u)*v)*dx + f * v * dx
+        self.F = (inner(u, v) + div(v)*p + div(u)*q)*dx + f * q * dx
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
