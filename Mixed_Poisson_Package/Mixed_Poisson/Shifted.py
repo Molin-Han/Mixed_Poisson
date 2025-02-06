@@ -83,6 +83,19 @@ class ShiftedPoisson:
     def build_direct_params(self):
         self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
 
+    def build_shifted_params(self):
+        self.params = {
+                        # 'ksp_type': 'preonly',
+                        'ksp_monitor': None,
+                        'snes_monitor': None,
+                        'snes_type':'ksponly',
+                        'ksp_atol': 0,
+                        'ksp_rtol': 1e-9,
+                        'pc_type':'lu', 
+                        'mat_type': 'aij',
+                        'pc_factor_mat_solver_type': 'mumps',
+                        }
+
     def build_ASM_MH_params(self):
         self.params = {
             'mat_type': 'matfree',
@@ -194,7 +207,8 @@ if __name__ == "__main__":
         equ = ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
-        equ.build_ASM_MH_params()
+        # equ.build_ASM_MH_params()
+        equ.build_shifted_params()
         # equ.build_direct_params()
         # equ.build_LinearVariationalSolver()
         equ.build_NonlinearVariationalSolver(shift=True)
