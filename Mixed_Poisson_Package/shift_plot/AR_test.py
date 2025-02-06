@@ -52,7 +52,7 @@ j = 0
 for ratio in ar_list:
     error = np.loadtxt(f'err_ar_{ratio}.out')
     x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"height={round(height_array[j],5)}")
+    ax.semilogy(x, error, label=f"ar={round(ratio,5)}")
     j+=1
     plt.legend()
     plt.xlabel("its")
