@@ -88,7 +88,7 @@ class ShiftedPoisson:
             'mat_type': 'matfree',
             'ksp_type': 'gmres',
             'snes_monitor': None,
-            # 'snes_type':'ksponly',
+            'snes_type':'ksponly',
             # 'ksp_monitor': None,
             # "ksp_monitor_true_residual": None,
             'pc_type': 'mg',
@@ -116,7 +116,7 @@ class ShiftedPoisson:
                 }
         }
 
-    def build_NonlinearVariationalSolver(self):
+    def build_NonlinearVariationalSolver(self, shift=True):
         # Variational Problem
         u = self.u_sol
         p = self.p_sol
@@ -124,6 +124,8 @@ class ShiftedPoisson:
         v = self.v
         f = self.f
         self.F = (inner(u, v) + div(v)*p + div(u)*q)*dx + f * q * dx
+        self.shift = (inner(u, v) + div(v)*p + div(u)*q + p * q)*dx + f * q * dx
+        Jp = derivative(self.shift, self.sol)
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
@@ -136,16 +138,41 @@ class ShiftedPoisson:
         trans_null = VectorSpaceBasis(constant=True)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
 
-        self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
+        self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jp)
         self.solver_w = NonlinearVariationalSolver(self.prob_w,
                                                     nullspace=self.nullspace,
                                                     transpose_nullspace=self.trans_nullspace,
                                                     solver_parameters=self.params, 
                                                     options_prefix='mixed_nonlinear')
 
-    def solve(self, monitor=False):
-        self.solver_w.solve()
+    def solve(self, monitor=False, xtest=False, ztest=False, artest=False):
+
         if monitor:
+            self.sol_final = np.loadtxt(f'sol_final.out')
+            error_list = []
+            # Set a monitor
+            def my_monitor_func(ksp, iteration_number, norm):
+                #print(f"The monitor is operating with current iteration {iteration_number}")
+                sol = ksp.buildSolution()
+                # Used relative error here
+                err = np.linalg.norm(self.sol_final - sol.getArray(), ord=2) / np.linalg.norm(self.sol_final)
+                #print(f"error norm is {err}")
+                error_list.append(err)
+            self.solver_w.snes.ksp.setMonitor(my_monitor_func)
+            self.solver_w.solve()
+            # print(error_list)
+            print("Monitor is on and working.")
+            if artest:
+                # test for the aspect ratio
+                np.savetxt(f'err_ar_{self.ar}.out', error_list)
+            if xtest:
+                # test for the different dx
+                np.savetxt(f'err_dx_{self.dx}.out', error_list)
+            if ztest:
+                # test for the different dz
+                np.savetxt(f'err_dz_{self.dz}.out', error_list)
+        else:
+            self.solver_w.solve()
             self.sol_final = self.solver_w.snes.ksp.getSolution().getArray()
             np.savetxt(f'sol_final.out',self.sol_final)
 
@@ -161,16 +188,16 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
-        mesh = "interval"
-        option = "regular"
+        mesh = "circle"
+        option = "random"
 
         equ = ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         equ.build_ASM_MH_params()
-        # equ.params_direct()
+        # equ.build_direct_params()
         # equ.build_LinearVariationalSolver()
-        equ.build_NonlinearVariationalSolver()
+        equ.build_NonlinearVariationalSolver(shift=True)
         equ.solve()
         print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
         equ.write()
