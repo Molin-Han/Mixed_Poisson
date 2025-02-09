@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
 class ShiftedPoisson:
-    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
+    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=False):
         '''
         mesh : interval or circle to be extruded.
         '''
@@ -24,12 +24,13 @@ class ShiftedPoisson:
             self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle')
             self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
 
-        # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
-        self.mh = MeshHierarchy(self.m, refinement_levels=0)
-        if mesh == "interval":
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
-        if mesh == "circle":
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
+        if MH:
+            # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
+            self.mh = MeshHierarchy(self.m, refinement_levels=0)
+            if mesh == "interval":
+                    self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
+            if mesh == "circle":
+                    self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
 
 
         # Mixed Finite Element Space
@@ -127,6 +128,30 @@ class ShiftedPoisson:
                 'ksp_type': 'preonly',
                 'pc_type': 'lu'
                 }
+        }
+
+    def build_FieldSplit_params(self):
+        self.params = {
+            'mat_type': 'aij',
+            'ksp_type': 'fgmres',
+            # 'snes_monitor': None,
+            # 'snes_type':'ksponly',
+            # 'ksp_monitor': None,
+            'pc_type': 'fieldsplit',
+            'pc_fieldsplit_type': 'schur',
+            'pc_fieldsplit_schur_fact_type': 'full',
+            'fieldsplit_0': {
+                'ksp_type': 'preonly',
+                'pc_type': 'lu',
+                'pc_factor_mat_solver_type': 'mumps',
+                'mat_type': 'aij',
+            },
+            'fieldsplit_1': {
+                'ksp_type': 'preonly',
+                'pc_type': 'lu',
+                'pc_factor_mat_solver_type': 'mumps',
+                'mat_type': 'aij',
+            }
         }
 
     def build_NonlinearVariationalSolver(self, shift=True):
