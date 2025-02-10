@@ -4,6 +4,16 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
+class DGLaplacian(AuxiliaryOperatorPC):
+    def form(self, pc, u, v):
+        W = u.function_space()
+        Jp = (inner(u, v) - div(v)*(-div(u)))*dx
+        #  Boundary conditions
+        bc1 = DirichletBC(W, as_vector([0., 0.]), "top")
+        bc2 = DirichletBC(W, as_vector([0., 0.]), "bottom")
+        bc3 = DirichletBC(W, as_vector([0., 0.]), "on_boundary")
+        bcs = [bc1, bc2, bc3]
+        return (Jp, bcs)
 class ShiftedPoisson:
     def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=False):
         '''
@@ -132,25 +142,28 @@ class ShiftedPoisson:
 
     def build_FieldSplit_params(self):
         self.params = {
-            'mat_type': 'aij',
-            'ksp_type': 'fgmres',
+            # 'mat_type': 'aij',
+            'ksp_type': 'gmres',
             # 'snes_monitor': None,
-            # 'snes_type':'ksponly',
-            # 'ksp_monitor': None,
+            'snes_type':'ksponly',
+            'ksp_monitor': None,
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
+            'pc_fieldsplit_schur_precondition':'selfp',
+            'pc_fieldsplit_0_fields': '1',
+            'pc_fieldsplit_1_fields': '0',
             'fieldsplit_0': {
                 'ksp_type': 'preonly',
                 'pc_type': 'lu',
                 'pc_factor_mat_solver_type': 'mumps',
-                'mat_type': 'aij',
+                # 'mat_type': 'aij',
             },
             'fieldsplit_1': {
                 'ksp_type': 'preonly',
                 'pc_type': 'lu',
                 'pc_factor_mat_solver_type': 'mumps',
-                'mat_type': 'aij',
+                # 'mat_type': 'aij',
             }
         }
 
@@ -161,8 +174,8 @@ class ShiftedPoisson:
         q = self.q
         v = self.v
         f = self.f
-        self.F = (inner(u, v) + div(v)*p + div(u)*q)*dx + f * q * dx
-        self.shift = (inner(u, v) + div(v)*p + div(u)*q + p * q)*dx + f * q * dx
+        self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
+        self.shift = (inner(u, v) - div(v)*(-div(u)) + div(u)*q + p * q)*dx + f * q * dx
         Jp = derivative(self.shift, self.sol)
 
         # Boundary conditions
@@ -233,7 +246,8 @@ if __name__ == "__main__":
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         # equ.build_ASM_MH_params()
-        equ.build_shifted_params()
+        # equ.build_shifted_params()
+        equ.build_FieldSplit_params()
         # equ.build_direct_params()
         # equ.build_LinearVariationalSolver()
         equ.build_NonlinearVariationalSolver(shift=True)
