@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson import Shifted
+from Mixed_Poisson import shifted as Schur_Shifted
 
 height = pi / 40
 horiz_num = 80
@@ -25,18 +25,16 @@ for i in nlayers_array:
     print(f"The dz is {dz}")
     dz_list.append(dz)
 
-    equ_MH = Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_MH = Schur_Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_MH.build_f(option=option)
-    # equ_MH.build_shifted_params()
     equ_MH.build_FieldSplit_params()
-    equ_MH.build_NonlinearVariationalSolver(fieldsplit=True)
+    equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
-    equ_monitor = Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_monitor = Schur_Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_monitor.build_f(option=option)
-    # equ_monitor.build_shifted_params()
     equ_monitor.build_FieldSplit_params()
-    equ_monitor.build_NonlinearVariationalSolver(fieldsplit=True)
+    equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, ztest=True)
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for dz = {dz}")

@@ -4,7 +4,27 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
-class HDivHelmholtz(AuxiliaryOperatorPC):
+class HDivHelmholtzPC(AuxiliaryOperatorPC):
+    _prefix = "helmholtzpc_"
+    def form(self, pc, U, V):
+        W = U.function_space()
+        u, p = split(U)
+        v, q = split(V)
+        # DG = W.sub(1)
+        # pcg = PCG64(seed=123456789)
+        # rg = Generator(pcg)
+        # f = rg.normal(DG, 1.0, 2.0)
+        # Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
+        Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx
+        # Boundary conditions
+        bc1 = DirichletBC(W.sub(0), as_vector([0., 0.]), "top")
+        bc2 = DirichletBC(W.sub(0), as_vector([0., 0.]), "bottom")
+        bc3 = DirichletBC(W.sub(0), as_vector([0., 0.]), "on_boundary")
+        bcs = [bc1, bc2, bc3]
+        return (Jp, bcs)
+
+class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
+    _prefix = "helmholtzschurpc_"
     def form(self, pc, u, v):
         W = u.function_space()
         Jp = (inner(u, v) + div(v)*div(u))*dx
@@ -142,15 +162,12 @@ class ShiftedPoisson:
 
 
     def build_FieldSplit_params(self):
-        self.params = {
-            # 'mat_type': 'aij',
-            'ksp_type': 'gmres',
-            # 'ksp_rtol': 1e-8,
-            # 'snes_monitor': None,
-            'snes_type':'ksponly',
-            'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-9,
+        helmholtz_schur_pc_params = {
+            'ksp_type': 'preonly',
+            'pc_type': 'lu',
+            'pc_factor_mat_solver_type': 'mumps',
+        }
+        helmholtz_pc_params={
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
@@ -165,27 +182,22 @@ class ShiftedPoisson:
             'fieldsplit_1': {
                 'ksp_type': 'preonly',
                 'pc_type': 'python',
-                'pc_python_type': __name__ + '.HDivHelmholtz',
-                'aux_pc_type': 'lu',
-                # 'pc_factor_mat_solver_type': 'mumps',
-                # 'pc_python_type': 'firedrake.AssembledPC',
-                # 'assembled_pc_type': 'python',
-                # 'assembled_pc_python_type': 'firedrake.ASMVankaPC',
-                # 'assembled_pc_vanka_construct_dim': 0,
-                # 'assembled_pc_vanka_sub_sub_pc_type': 'lu'
+                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+                'helmholtzschurpc': helmholtz_schur_pc_params,
             }
         }
-        # self.params = {
-        #                 # 'ksp_type': 'preonly',
-        #                 'ksp_monitor': None,
-        #                 'snes_monitor': None,
-        #                 'snes_type':'ksponly',
-        #                 # 'ksp_atol': 0,
-        #                 # 'ksp_rtol': 1e-9,
-        #                 'pc_type':'lu', 
-        #                 'mat_type': 'aij',
-        #                 'pc_factor_mat_solver_type': 'mumps',
-        #                 }
+        self.params = {
+            'ksp_type': 'gmres',
+            # 'snes_monitor': None,
+            'snes_type':'ksponly',
+            'ksp_monitor': None,
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-9,
+            'pc_type': 'python',
+            'pc_python_type': __name__ + '.HDivHelmholtzPC',
+            'helmholtzpc': helmholtz_pc_params,
+        }
+
 
     def build_NonlinearVariationalSolver(self, shift=False, fieldsplit=False):
         # Variational Problem
@@ -195,11 +207,11 @@ class ShiftedPoisson:
         v = self.v
         f = self.f
         self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
-        if shift:
-            self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx + f * q * dx
-        if fieldsplit: # Eliminate pressure using shifted pc equation.
-            self.shift = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
-        Jp = derivative(self.shift, self.sol)
+        # if shift:
+        #     self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx + f * q * dx
+        # if fieldsplit: # Eliminate pressure using shifted pc equation.
+        #     self.shift = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
+        # Jp = derivative(self.shift, self.sol) # TODO: we don't need to compute the Jacobian since we used Auxiliary Operator PC.
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
@@ -212,7 +224,7 @@ class ShiftedPoisson:
         trans_null = VectorSpaceBasis(constant=True)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
 
-        self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jp)
+        self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
         self.solver_w = NonlinearVariationalSolver(self.prob_w,
                                                     nullspace=self.nullspace,
                                                     transpose_nullspace=self.trans_nullspace,
@@ -272,7 +284,7 @@ if __name__ == "__main__":
         # equ.build_shifted_params()
         equ.build_FieldSplit_params()
         # equ.build_direct_params()
-        equ.build_NonlinearVariationalSolver(shift=False, fieldsplit=True)
+        equ.build_NonlinearVariationalSolver()
         equ.solve()
         print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
         equ.write()
