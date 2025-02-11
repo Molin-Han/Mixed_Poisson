@@ -191,8 +191,8 @@ class ShiftedPoisson:
             # 'snes_monitor': None,
             'snes_type':'ksponly',
             'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-9,
+            'ksp_atol': 0,
+            'ksp_rtol': 1e-8,
             'pc_type': 'python',
             'pc_python_type': __name__ + '.HDivHelmholtzPC',
             'helmholtzpc': helmholtz_pc_params,
@@ -207,11 +207,6 @@ class ShiftedPoisson:
         v = self.v
         f = self.f
         self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
-        # if shift:
-        #     self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx + f * q * dx
-        # if fieldsplit: # Eliminate pressure using shifted pc equation.
-        #     self.shift = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
-        # Jp = derivative(self.shift, self.sol) # TODO: we don't need to compute the Jacobian since we used Auxiliary Operator PC.
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")

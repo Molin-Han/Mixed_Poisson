@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-
+# TODO: This is the implementation without using the Auxiliary Operator PC to express Jp for the shifted PC. 
 class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
     _prefix = "helmholtzschurpc_"
     def form(self, pc, u, v):
@@ -101,8 +101,8 @@ class ShiftedPoisson:
                         'ksp_monitor': None,
                         'snes_monitor': None,
                         'snes_type':'ksponly',
-                        # 'ksp_atol': 0,
-                        # 'ksp_rtol': 1e-9,
+                        'ksp_atol': 0,
+                        'ksp_rtol': 1e-8,
                         'pc_type':'lu', 
                         'mat_type': 'aij',
                         'pc_factor_mat_solver_type': 'mumps',
@@ -121,7 +121,7 @@ class ShiftedPoisson:
             'snes_type':'ksponly',
             'ksp_monitor': None,
             # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-9,
+            # 'ksp_rtol': 1e-8,
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',

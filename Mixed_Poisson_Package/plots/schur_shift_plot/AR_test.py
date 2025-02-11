@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson import Schur_Shifted
 
-rate = 4000
+rate = 400
 height_array = np.arange(10, 2.0, -1.0) * pi / rate
 horiz_num = 80
 nlayers = 20
@@ -49,4 +49,4 @@ for ratio in ar_list:
     plt.ylabel("log_error")
     #plt.savefig(f"error_final{ratio}.png")
     
-plt.savefig(f"error_final_ar_{option}_{ratio}.png")
+plt.savefig(f"ar_{option}_{ratio}.png")

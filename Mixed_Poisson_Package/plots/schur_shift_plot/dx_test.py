@@ -6,7 +6,7 @@ from firedrake.output import VTKFile
 from Mixed_Poisson import Schur_Shifted
 
 height = pi / 40
-horiz_array = np.arange(2, 50, 5) * 100
+horiz_array = np.arange(2, 50, 5) * 2
 nlayers = 20
 radius = 2
 mesh = "circle"
@@ -50,4 +50,4 @@ for dx in dx_list:
     plt.ylabel("log_error")
     #plt.savefig(f"error_final{dx}.png")
 
-plt.savefig(f"error_final_dx_{option}_{dx}.png")
+plt.savefig(f"dx_{option}_{dx}.png")

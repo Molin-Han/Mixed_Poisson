@@ -51,4 +51,4 @@ for dz in dz_list:
     plt.ylabel("log_error")
     #plt.savefig(f"error_final{dz}.png")
 
-plt.savefig(f"error_final_dz_{option}_{dz}.png")
+plt.savefig(f"dz_{option}_{dz}.png")
