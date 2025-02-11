@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson import Shifted
 
-rate = 400
+rate = 4000
 height_array = np.arange(10, 2.0, -1.0) * pi / rate
 #height_array = np.array([1.0]) * pi /40
 horiz_num = 80
@@ -29,7 +29,7 @@ for i in height_array:
     equ_MH.build_f(option=option)
     # equ_MH.build_shifted_params()
     equ_MH.build_FieldSplit_params()
-    equ_MH.build_NonlinearVariationalSolver(shift=True)
+    equ_MH.build_NonlinearVariationalSolver(fieldsplit=True)
     # equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
@@ -37,7 +37,7 @@ for i in height_array:
     equ_monitor.build_f(option=option)
     # equ_monitor.build_shifted_params()
     equ_monitor.build_FieldSplit_params()
-    equ_monitor.build_NonlinearVariationalSolver(shift=True)
+    equ_monitor.build_NonlinearVariationalSolver(fieldsplit=True)
     # equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, artest=True)
 

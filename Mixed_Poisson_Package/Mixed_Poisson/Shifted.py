@@ -4,10 +4,10 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
-class DGLaplacian(AuxiliaryOperatorPC):
+class HDivHelmholtz(AuxiliaryOperatorPC):
     def form(self, pc, u, v):
         W = u.function_space()
-        Jp = (inner(u, v) - div(v)*(-div(u)))*dx
+        Jp = (inner(u, v) + div(v)*div(u))*dx
         #  Boundary conditions
         bc1 = DirichletBC(W, as_vector([0., 0.]), "top")
         bc2 = DirichletBC(W, as_vector([0., 0.]), "bottom")
@@ -100,8 +100,8 @@ class ShiftedPoisson:
                         'ksp_monitor': None,
                         'snes_monitor': None,
                         'snes_type':'ksponly',
-                        'ksp_atol': 0,
-                        'ksp_rtol': 1e-9,
+                        # 'ksp_atol': 0,
+                        # 'ksp_rtol': 1e-9,
                         'pc_type':'lu', 
                         'mat_type': 'aij',
                         'pc_factor_mat_solver_type': 'mumps',
@@ -140,13 +140,17 @@ class ShiftedPoisson:
                 }
         }
 
+
     def build_FieldSplit_params(self):
         self.params = {
             # 'mat_type': 'aij',
             'ksp_type': 'gmres',
+            # 'ksp_rtol': 1e-8,
             # 'snes_monitor': None,
             'snes_type':'ksponly',
             'ksp_monitor': None,
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-9,
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
@@ -157,17 +161,33 @@ class ShiftedPoisson:
                 'ksp_type': 'preonly',
                 'pc_type': 'lu',
                 'pc_factor_mat_solver_type': 'mumps',
-                # 'mat_type': 'aij',
             },
             'fieldsplit_1': {
                 'ksp_type': 'preonly',
-                'pc_type': 'lu',
-                'pc_factor_mat_solver_type': 'mumps',
-                # 'mat_type': 'aij',
+                'pc_type': 'python',
+                'pc_python_type': __name__ + '.HDivHelmholtz',
+                'aux_pc_type': 'lu',
+                # 'pc_factor_mat_solver_type': 'mumps',
+                # 'pc_python_type': 'firedrake.AssembledPC',
+                # 'assembled_pc_type': 'python',
+                # 'assembled_pc_python_type': 'firedrake.ASMVankaPC',
+                # 'assembled_pc_vanka_construct_dim': 0,
+                # 'assembled_pc_vanka_sub_sub_pc_type': 'lu'
             }
         }
+        # self.params = {
+        #                 # 'ksp_type': 'preonly',
+        #                 'ksp_monitor': None,
+        #                 'snes_monitor': None,
+        #                 'snes_type':'ksponly',
+        #                 # 'ksp_atol': 0,
+        #                 # 'ksp_rtol': 1e-9,
+        #                 'pc_type':'lu', 
+        #                 'mat_type': 'aij',
+        #                 'pc_factor_mat_solver_type': 'mumps',
+        #                 }
 
-    def build_NonlinearVariationalSolver(self, shift=True):
+    def build_NonlinearVariationalSolver(self, shift=False, fieldsplit=False):
         # Variational Problem
         u = self.u_sol
         p = self.p_sol
@@ -175,7 +195,10 @@ class ShiftedPoisson:
         v = self.v
         f = self.f
         self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
-        self.shift = (inner(u, v) - div(v)*(-div(u)) + div(u)*q + p * q)*dx + f * q * dx
+        if shift:
+            self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx + f * q * dx
+        if fieldsplit: # Eliminate pressure using shifted pc equation.
+            self.shift = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
         Jp = derivative(self.shift, self.sol)
 
         # Boundary conditions
@@ -242,15 +265,14 @@ if __name__ == "__main__":
         mesh = "circle"
         option = "random"
 
-        equ = ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+        equ = ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=False)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         # equ.build_ASM_MH_params()
         # equ.build_shifted_params()
         equ.build_FieldSplit_params()
         # equ.build_direct_params()
-        # equ.build_LinearVariationalSolver()
-        equ.build_NonlinearVariationalSolver(shift=True)
+        equ.build_NonlinearVariationalSolver(shift=False, fieldsplit=True)
         equ.solve()
         print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
         equ.write()
