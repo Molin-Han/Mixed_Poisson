@@ -15,7 +15,8 @@ class HDivHelmholtzPC(AuxiliaryOperatorPC):
         # rg = Generator(pcg)
         # f = rg.normal(DG, 1.0, 2.0)
         # Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
-        Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx
+        # Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx
+        Jp = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx
         # Boundary conditions
         bc1 = DirichletBC(W.sub(0), as_vector([0., 0.]), "top")
         bc2 = DirichletBC(W.sub(0), as_vector([0., 0.]), "bottom")
@@ -171,13 +172,20 @@ class ShiftedPoisson:
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
-            'pc_fieldsplit_schur_precondition':'selfp',
+            # 'pc_fieldsplit_schur_precondition':'selfp',
             'pc_fieldsplit_0_fields': '1',
             'pc_fieldsplit_1_fields': '0',
             'fieldsplit_0': {
                 'ksp_type': 'preonly',
                 'pc_type': 'lu',
                 'pc_factor_mat_solver_type': 'mumps',
+                # "pc_type": "python",
+                # "pc_python_type": "firedrake.AssembledPC",
+                # "assembled_pc_type": "python",
+                # "assembled_pc_python_type": "firedrake.ASMVankaPC",
+                # "assembled_pc_vanka_construct_dim": 0,
+                # "assembled_pc_vanka_sub_sub_pc_type": "lu",
+                # "assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps'
             },
             'fieldsplit_1': {
                 'ksp_type': 'preonly',
@@ -186,6 +194,17 @@ class ShiftedPoisson:
                 'helmholtzschurpc': helmholtz_schur_pc_params,
             }
         }
+        # helmholtz_pc_params = {
+        #                 # 'ksp_type': 'preonly',
+        #                 'ksp_monitor': None,
+        #                 'snes_monitor': None,
+        #                 'snes_type':'ksponly',
+        #                 # 'ksp_atol': 0,
+        #                 # 'ksp_rtol': 1e-9,
+        #                 'pc_type':'lu', 
+        #                 'mat_type': 'aij',
+        #                 'pc_factor_mat_solver_type': 'mumps',
+        #             }
         self.params = {
             'ksp_type': 'gmres',
             # 'snes_monitor': None,

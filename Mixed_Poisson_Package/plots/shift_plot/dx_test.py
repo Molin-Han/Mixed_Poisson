@@ -27,15 +27,15 @@ for i in horiz_array:
 
     equ_MH = Schur_Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_MH.build_f(option=option)
-    # equ_MH.build_FieldSplit_params()
-    equ_MH.build_shifted_params()
+    equ_MH.build_FieldSplit_params()
+    # equ_MH.build_shifted_params()
     equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
     equ_monitor = Schur_Shifted.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_monitor.build_f(option=option)
-    # equ_monitor.build_FieldSplit_params()
-    equ_monitor.build_shifted_params()
+    equ_monitor.build_FieldSplit_params()
+    # equ_monitor.build_shifted_params()
     equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, xtest=True)
 

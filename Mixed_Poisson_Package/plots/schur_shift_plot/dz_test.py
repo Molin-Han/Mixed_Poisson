@@ -7,7 +7,7 @@ from Mixed_Poisson import Schur_Shifted
 
 height = pi / 40
 horiz_num = 80
-nlayers_array = np.arange(2, 11, 2) * 100
+nlayers_array = np.arange(2, 11, 2) * 10
 radius = 2
 mesh = "circle"
 option = "random"
