@@ -10,12 +10,6 @@ class HDivHelmholtzPC(AuxiliaryOperatorPC):
         W = U.function_space()
         u, p = split(U)
         v, q = split(V)
-        # DG = W.sub(1)
-        # pcg = PCG64(seed=123456789)
-        # rg = Generator(pcg)
-        # f = rg.normal(DG, 1.0, 2.0)
-        # Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
-        # Jp = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx
         Jp = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx
         # Boundary conditions
         bc1 = DirichletBC(W.sub(0), as_vector([0., 0.]), "top")
@@ -112,113 +106,72 @@ class ShiftedPoisson:
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
 
-    def build_direct_params(self):
-        self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
-
-    def build_shifted_params(self):
-        self.params = {
+    def build_FieldSplit_params(self, fieldsplit=True, Jp=False):
+        if Jp:
+            self.params = {
                         # 'ksp_type': 'preonly',
                         'ksp_monitor': None,
                         'snes_monitor': None,
                         'snes_type':'ksponly',
-                        # 'ksp_atol': 0,
-                        # 'ksp_rtol': 1e-9,
+                        'ksp_atol': 0,
+                        'ksp_rtol': 1e-8,
                         'pc_type':'lu', 
                         'mat_type': 'aij',
                         'pc_factor_mat_solver_type': 'mumps',
                         }
-
-    def build_ASM_MH_params(self):
-        self.params = {
-            'mat_type': 'matfree',
-            'ksp_type': 'gmres',
-            'snes_monitor': None,
-            'snes_type':'ksponly',
-            # 'ksp_monitor': None,
-            # "ksp_monitor_true_residual": None,
-            'pc_type': 'mg',
-            'pc_mg_type': 'full',
-            "ksp_converged_reason": None,
-            "snes_converged_reason": None,
-            'mg_levels': {
-                'ksp_type': 'richardson',
-                # "ksp_monitor_true_residual": None,
-                # "ksp_view": None,
-                "ksp_atol": 1e-50,
-                "ksp_rtol": 1e-10,
-                'ksp_max_it': 1,
-                'pc_type': 'python',
-                'pc_python_type': 'firedrake.AssembledPC',
-                'assembled_pc_type': 'python',
-                'assembled_pc_python_type': 'firedrake.ASMVankaPC',
-                'assembled_pc_vanka_construct_dim': 0,
-                'assembled_pc_vanka_sub_sub_pc_type': 'lu'
-                #'assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type':'mumps'
-                },
-            'mg_coarse': {
-                'ksp_type': 'preonly',
-                'pc_type': 'lu'
+            
+        else:
+            if fieldsplit:
+                helmholtz_schur_pc_params = {
+                    'ksp_type': 'preonly',
+                    'pc_type': 'lu',
+                    'pc_factor_mat_solver_type': 'mumps',
                 }
-        }
-
-
-    def build_FieldSplit_params(self):
-        helmholtz_schur_pc_params = {
-            'ksp_type': 'preonly',
-            'pc_type': 'lu',
-            'pc_factor_mat_solver_type': 'mumps',
-        }
-        helmholtz_pc_params={
-            'pc_type': 'fieldsplit',
-            'pc_fieldsplit_type': 'schur',
-            'pc_fieldsplit_schur_fact_type': 'full',
-            # 'pc_fieldsplit_schur_precondition':'selfp',
-            'pc_fieldsplit_0_fields': '1',
-            'pc_fieldsplit_1_fields': '0',
-            'fieldsplit_0': {
-                'ksp_type': 'preonly',
-                'pc_type': 'lu',
-                'pc_factor_mat_solver_type': 'mumps',
-                # "pc_type": "python",
-                # "pc_python_type": "firedrake.AssembledPC",
-                # "assembled_pc_type": "python",
-                # "assembled_pc_python_type": "firedrake.ASMVankaPC",
-                # "assembled_pc_vanka_construct_dim": 0,
-                # "assembled_pc_vanka_sub_sub_pc_type": "lu",
-                # "assembled_pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps'
-            },
-            'fieldsplit_1': {
-                'ksp_type': 'preonly',
+                helmholtz_pc_params = {
+                    'pc_type': 'fieldsplit',
+                    'pc_fieldsplit_type': 'schur',
+                    'pc_fieldsplit_schur_fact_type': 'full',
+                    # 'pc_fieldsplit_schur_precondition':'selfp',
+                    'pc_fieldsplit_0_fields': '1',
+                    'pc_fieldsplit_1_fields': '0',
+                    'fieldsplit_0': {
+                        'ksp_type': 'preonly',
+                        'pc_type': 'lu',
+                        'pc_factor_mat_solver_type': 'mumps',
+                    },
+                    'fieldsplit_1': {
+                        'ksp_type': 'preonly',
+                        'pc_type': 'python',
+                        'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+                        'helmholtzschurpc': helmholtz_schur_pc_params,
+                    }
+                }
+            else:
+                helmholtz_pc_params = {
+                                # 'ksp_type': 'preonly',
+                                'ksp_monitor': None,
+                                'snes_monitor': None,
+                                'snes_type':'ksponly',
+                                # 'ksp_atol': 0,
+                                # 'ksp_rtol': 1e-9,
+                                'pc_type':'lu', 
+                                'mat_type': 'aij',
+                                'pc_factor_mat_solver_type': 'mumps',
+                            }
+            self.params = {
+                'ksp_type': 'gmres',
+                # 'snes_monitor': None,
+                'snes_type':'ksponly',
+                'ksp_monitor': None,
+                'ksp_atol': 0,
+                'ksp_rtol': 1e-8,
                 'pc_type': 'python',
-                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_params,
+                'pc_python_type': __name__ + '.HDivHelmholtzPC',
+                'helmholtzpc': helmholtz_pc_params,
             }
-        }
-        # helmholtz_pc_params = {
-        #                 # 'ksp_type': 'preonly',
-        #                 'ksp_monitor': None,
-        #                 'snes_monitor': None,
-        #                 'snes_type':'ksponly',
-        #                 # 'ksp_atol': 0,
-        #                 # 'ksp_rtol': 1e-9,
-        #                 'pc_type':'lu', 
-        #                 'mat_type': 'aij',
-        #                 'pc_factor_mat_solver_type': 'mumps',
-        #             }
-        self.params = {
-            'ksp_type': 'gmres',
-            # 'snes_monitor': None,
-            'snes_type':'ksponly',
-            'ksp_monitor': None,
-            'ksp_atol': 0,
-            'ksp_rtol': 1e-8,
-            'pc_type': 'python',
-            'pc_python_type': __name__ + '.HDivHelmholtzPC',
-            'helmholtzpc': helmholtz_pc_params,
-        }
 
 
-    def build_NonlinearVariationalSolver(self, shift=False, fieldsplit=False):
+    def build_NonlinearVariationalSolver(self, Jp=False):
         # Variational Problem
         u = self.u_sol
         p = self.p_sol
@@ -226,6 +179,9 @@ class ShiftedPoisson:
         v = self.v
         f = self.f
         self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
+        if Jp:
+            self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx
+            Jac_p = derivative(self.shift, self.sol)
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
@@ -237,8 +193,10 @@ class ShiftedPoisson:
         self.nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), v_basis])
         trans_null = VectorSpaceBasis(constant=True)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
-
-        self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
+        if Jp:
+            self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jp)
+        else:
+            self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
         self.solver_w = NonlinearVariationalSolver(self.prob_w,
                                                     nullspace=self.nullspace,
                                                     transpose_nullspace=self.trans_nullspace,

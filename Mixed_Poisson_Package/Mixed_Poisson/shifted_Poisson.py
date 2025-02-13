@@ -153,7 +153,7 @@ class ShiftedPoisson:
         if shift:
             self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx + f * q * dx
         if fieldsplit: # Eliminate pressure using shifted pc equation.
-            self.shift = (inner(u, v) + div(v)*div(u) + div(u)*q + p * q)*dx + f * q * dx
+            self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx # + f * q * dx
         Jp = derivative(self.shift, self.sol) # TODO: we don't need to compute the Jacobian since we used Auxiliary Operator PC.
 
         # Boundary conditions
