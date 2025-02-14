@@ -106,10 +106,48 @@ class ShiftedPoisson:
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
 
-    def build_FieldSplit_params(self, fieldsplit=True, Jp=False):
+    def build_FieldSplit_params(self, fieldsplit=True, Jp=True):
         if Jp:
-            self.params = {
-                        # 'ksp_type': 'preonly',
+            if fieldsplit:
+                helmholtz_schur_pc_params = {
+                    # 'ksp_type': 'preonly',
+                    'ksp_monitor': None,
+                    # 'snes_monitor': None,
+                    'snes_type':'ksponly',
+                    # 'ksp_atol': 0,
+                    # 'ksp_rtol': 1e-9,
+                    'pc_type':'lu', 
+                    'mat_type': 'aij',
+                    'pc_factor_mat_solver_type': 'mumps',
+                }
+                self.params = {
+                    'ksp_type': 'gmres',
+                    'snes_type':'ksponly',
+                    # 'snes_monitor': None,
+                    'ksp_monitor': None,
+                    # 'ksp_atol': 0,
+                    # 'ksp_rtol': 1e-8,
+                    'pc_type': 'fieldsplit',
+                    'pc_fieldsplit_type': 'schur',
+                    'pc_fieldsplit_schur_fact_type': 'full',
+                    'pc_fieldsplit_schur_precondition':'selfp',
+                    'pc_fieldsplit_0_fields': '1',
+                    'pc_fieldsplit_1_fields': '0',
+                    'fieldsplit_0': {
+                        'ksp_type': 'preonly',
+                        'pc_type': 'lu',
+                        'pc_factor_mat_solver_type': 'mumps',
+                    },
+                    'fieldsplit_1': {
+                        'ksp_type': 'preonly',
+                        'pc_type': 'python',
+                        'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+                        'helmholtzschurpc': helmholtz_schur_pc_params,
+                    }
+                }
+            else:
+                self.params = {
+                        'ksp_type': 'gmres',
                         'ksp_monitor': None,
                         'snes_monitor': None,
                         'snes_type':'ksponly',
@@ -119,11 +157,10 @@ class ShiftedPoisson:
                         'mat_type': 'aij',
                         'pc_factor_mat_solver_type': 'mumps',
                         }
-            
         else:
             if fieldsplit:
                 helmholtz_schur_pc_params = {
-                    'ksp_type': 'preonly',
+                    # 'ksp_type': 'preonly',
                     'pc_type': 'lu',
                     'pc_factor_mat_solver_type': 'mumps',
                 }
@@ -171,7 +208,7 @@ class ShiftedPoisson:
             }
 
 
-    def build_NonlinearVariationalSolver(self, Jp=False):
+    def build_NonlinearVariationalSolver(self, Jp=True):
         # Variational Problem
         u = self.u_sol
         p = self.p_sol
@@ -194,14 +231,14 @@ class ShiftedPoisson:
         trans_null = VectorSpaceBasis(constant=True)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
         if Jp:
-            self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jp)
+            self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jac_p)
         else:
             self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs)
         self.solver_w = NonlinearVariationalSolver(self.prob_w,
                                                     nullspace=self.nullspace,
                                                     transpose_nullspace=self.trans_nullspace,
                                                     solver_parameters=self.params, 
-                                                    options_prefix='mixed_nonlinear')
+                                                    options_prefix='mixed_linear')
 
     def solve(self, monitor=False, xtest=False, ztest=False, artest=False):
 
