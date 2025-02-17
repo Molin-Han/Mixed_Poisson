@@ -106,7 +106,7 @@ class ShiftedPoisson:
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
 
-    def build_FieldSplit_params(self, fieldsplit=True, Jp=True):
+    def build_FieldSplit_params(self, fieldsplit=False, Jp=True):
         if Jp:
             if fieldsplit:
                 helmholtz_schur_pc_params = {
