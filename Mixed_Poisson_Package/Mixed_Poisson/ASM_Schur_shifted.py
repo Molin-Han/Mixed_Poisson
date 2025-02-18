@@ -15,7 +15,7 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         bc3 = DirichletBC(W, as_vector([0., 0.]), "on_boundary")
         bcs = [bc1, bc2, bc3]
         return (Jp, bcs)
-class ShiftedPoisson:
+class ASMShiftedPoisson:
     def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=False):
         '''
         mesh : interval or circle to be extruded.
@@ -111,34 +111,44 @@ class ShiftedPoisson:
 
     def build_FieldSplit_params(self):
         helmholtz_schur_pc_params = {
+            # 'ksp_type': 'preonly',
             'ksp_monitor': None,
-            'ksp_type': 'preonly',
-            'pc_type': 'lu',
-            'pc_factor_mat_solver_type': 'mumps',
+            # 'snes_monitor': None,
+            'snes_type':'ksponly',
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-9,
+            "pc_type": "python",
+            "pc_python_type": "firedrake.ASMVankaPC",
+            "pc_vanka_construct_dim": 0,
+            "pc_vanka_sub_sub_pc_type": "lu",
+            # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
         }
         self.params = {
             'ksp_type': 'gmres',
-            # 'snes_monitor': None,
             'snes_type':'ksponly',
+            # 'ksp_view': None,
+            # 'snes_monitor': None,
             'ksp_monitor': None,
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
+            # 'pc_fieldsplit_schur_precondition':'selfp',
             'pc_fieldsplit_0_fields': '1',
             'pc_fieldsplit_1_fields': '0',
             'fieldsplit_0': {
                 'ksp_type': 'preonly',
                 'pc_type': 'bjacobi',
                 'sub_pc_type': 'ilu',
+                # 'pc_factor_mat_solver_type': 'mumps',
             },
             'fieldsplit_1': {
                 'ksp_type': 'preonly',
                 'pc_type': 'python',
                 'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
                 'helmholtzschurpc': helmholtz_schur_pc_params,
-            }
+                }
         }
 
 
@@ -151,7 +161,7 @@ class ShiftedPoisson:
         f = self.f
         self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
         self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx # + f * q * dx
-        Jp = derivative(self.shift, self.sol) # TODO: we don't need to compute the Jacobian since we used Auxiliary Operator PC.
+        Jp = derivative(self.shift, self.sol)
 
         # Boundary conditions
         bc1 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "top")
@@ -217,7 +227,7 @@ if __name__ == "__main__":
         mesh = "circle"
         option = "random"
 
-        equ = ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=False)
+        equ = ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=False)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         # equ.build_ASM_MH_params()

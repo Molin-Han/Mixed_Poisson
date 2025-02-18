@@ -106,7 +106,7 @@ class ShiftedPoisson:
         f_int = assemble(self.f*dx)
         self.f.interpolate(self.f - f_int/area)
 
-    def build_FieldSplit_params(self, fieldsplit=False, Jp=True):
+    def build_FieldSplit_params(self, fieldsplit=True, Jp=True):
         if Jp:
             if fieldsplit:
                 helmholtz_schur_pc_params = {
@@ -116,9 +116,15 @@ class ShiftedPoisson:
                     'snes_type':'ksponly',
                     # 'ksp_atol': 0,
                     # 'ksp_rtol': 1e-9,
-                    'pc_type':'lu', 
-                    'mat_type': 'aij',
-                    'pc_factor_mat_solver_type': 'mumps',
+                    # "pc_python_type": "firedrake.AssembledPC",
+                    "pc_type": "python",
+                    "pc_python_type": "firedrake.ASMVankaPC",
+                    "pc_vanka_construct_dim": 0,
+                    "pc_vanka_sub_sub_pc_type": "lu",
+                    # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
+                    # 'pc_type':'lu', 
+                    # 'mat_type': 'aij',
+                    # 'pc_factor_mat_solver_type': 'mumps',
                 }
                 self.params = {
                     'ksp_type': 'gmres',
@@ -130,13 +136,14 @@ class ShiftedPoisson:
                     'pc_type': 'fieldsplit',
                     'pc_fieldsplit_type': 'schur',
                     'pc_fieldsplit_schur_fact_type': 'full',
-                    'pc_fieldsplit_schur_precondition':'selfp',
+                    # 'pc_fieldsplit_schur_precondition':'selfp',
                     'pc_fieldsplit_0_fields': '1',
                     'pc_fieldsplit_1_fields': '0',
                     'fieldsplit_0': {
                         'ksp_type': 'preonly',
-                        'pc_type': 'lu',
-                        'pc_factor_mat_solver_type': 'mumps',
+                        'pc_type': 'bjacobi',
+                        'sub_pc_type': 'ilu',
+                        # 'pc_factor_mat_solver_type': 'mumps',
                     },
                     'fieldsplit_1': {
                         'ksp_type': 'preonly',

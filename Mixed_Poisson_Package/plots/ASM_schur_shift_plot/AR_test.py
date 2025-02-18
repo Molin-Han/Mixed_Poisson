@@ -3,15 +3,15 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson import shifted_Poisson
+from Mixed_Poisson import ASM_Schur_shifted
 
-rate = 4000
+rate = 8000
 height_array = np.arange(15, 6.0, -1.0) * pi / rate
 #height_array = np.array([1.0]) * pi /40
 # horiz_num = 80
 # nlayers = 20
-horiz_num = 1000
-nlayers = 300
+horiz_num = 100
+nlayers = 200
 radius = 2
 mesh = "circle"
 option = "random"
@@ -26,7 +26,7 @@ for i in height_array:
     ar = height/ (2 * pi * radius)
     print(f"Aspect ratio is {ar}")
     ar_list.append(ar)
-    equ_MH = shifted_Poisson.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_MH = ASM_Schur_shifted.ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     print(f"!!!!The calculation is down in a {equ_MH.m.name} mesh.")
     equ_MH.build_f(option=option)
     # equ_MH.build_shifted_params()
@@ -34,7 +34,7 @@ for i in height_array:
     equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
-    equ_monitor = shifted_Poisson.ShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_monitor = ASM_Schur_shifted.ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_monitor.build_f(option=option)
     # equ_monitor.build_shifted_params()
     equ_monitor.build_FieldSplit_params()
