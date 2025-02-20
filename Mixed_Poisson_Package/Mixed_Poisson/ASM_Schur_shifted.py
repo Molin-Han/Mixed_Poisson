@@ -39,9 +39,9 @@ class ASMShiftedPoisson:
             # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
             self.mh = MeshHierarchy(self.m, refinement_levels=0)
             if mesh == "interval":
-                    self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
+                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='uniform')
             if mesh == "circle":
-                    self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
+                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,layers=[1, nlayers], extrusion_type='radial')
 
 
         # Mixed Finite Element Space
@@ -134,7 +134,6 @@ class ASMShiftedPoisson:
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
-            # 'pc_fieldsplit_schur_precondition':'selfp',
             'pc_fieldsplit_0_fields': '1',
             'pc_fieldsplit_1_fields': '0',
             'fieldsplit_0': {
@@ -151,6 +150,8 @@ class ASMShiftedPoisson:
                 }
         }
 
+    def build_MH_params(self):
+        pass
 
     def build_NonlinearVariationalSolver(self):
         # Variational Problem
