@@ -151,7 +151,84 @@ class ASMShiftedPoisson:
         }
 
     def build_MH_params(self):
-        pass
+        helmholtz_schur_pc_params = {
+            # 'ksp_type': 'preonly',
+            'ksp_monitor': None,
+            # 'snes_monitor': None,
+            'snes_type':'ksponly',
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-9,
+            "pc_type": "python",
+            "pc_python_type": "firedrake.ASMVankaPC",
+            "pc_vanka_construct_dim": 0,
+            "pc_vanka_sub_sub_pc_type": "lu",
+            # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
+        }
+        mg_levels_params = {
+            'ksp_type': 'gmres',
+            'snes_type':'ksponly',
+            # 'ksp_view': None,
+            # 'snes_monitor': None,
+            'ksp_monitor': None,
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-8,
+            'pc_type': 'fieldsplit',
+            'pc_fieldsplit_type': 'schur',
+            'pc_fieldsplit_schur_fact_type': 'full',
+            'pc_fieldsplit_0_fields': '1',
+            'pc_fieldsplit_1_fields': '0',
+            'fieldsplit_0': {
+                'ksp_type': 'preonly',
+                'pc_type': 'bjacobi',
+                'sub_pc_type': 'ilu',
+                # 'pc_factor_mat_solver_type': 'mumps',
+            },
+            'fieldsplit_1': {
+                'ksp_type': 'preonly',
+                'pc_type': 'python',
+                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+                'helmholtzschurpc': helmholtz_schur_pc_params,
+                }
+        }
+        mg_coarse_params = {
+            'ksp_type': 'gmres',
+            'snes_type':'ksponly',
+            # 'ksp_view': None,
+            # 'snes_monitor': None,
+            'ksp_monitor': None,
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-8,
+            'pc_type': 'fieldsplit',
+            'pc_fieldsplit_type': 'schur',
+            'pc_fieldsplit_schur_fact_type': 'full',
+            'pc_fieldsplit_0_fields': '1',
+            'pc_fieldsplit_1_fields': '0',
+            'fieldsplit_0': {
+                'ksp_type': 'preonly',
+                'pc_type': 'bjacobi',
+                'sub_pc_type': 'ilu',
+                # 'pc_factor_mat_solver_type': 'mumps',
+            },
+            'fieldsplit_1': {
+                'ksp_type': 'preonly',
+                'pc_type': 'python',
+                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+                'helmholtzschurpc': helmholtz_schur_pc_params,
+                }
+        }
+        self.params = {
+            'ksp_type': 'gmres',
+            'snes_type':'ksponly',
+            # 'ksp_view': None,
+            # 'snes_monitor': None,
+            'ksp_monitor': None,
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-8,
+            'pc_type': 'mg',
+            'pc_mg_type': 'full', # TODO: check this option.
+            'mg_levels': mg_levels_params,
+            'mg_coarse': mg_coarse_params
+        }
 
     def build_NonlinearVariationalSolver(self):
         # Variational Problem
