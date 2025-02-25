@@ -6,7 +6,7 @@ from firedrake.output import VTKFile
 from Mixed_Poisson import shifted_Poisson
 
 rate = 4000
-height_array = np.arange(15, 6.0, -1.0) * pi / rate
+height_array = np.exp(np.arange(7, -3, -1.0)) * pi / rate
 #height_array = np.array([1.0]) * pi /40
 # horiz_num = 80
 # nlayers = 20

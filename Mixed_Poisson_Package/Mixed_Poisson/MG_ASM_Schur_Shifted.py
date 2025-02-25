@@ -15,8 +15,8 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         bc3 = DirichletBC(W, as_vector([0., 0.]), "on_boundary")
         bcs = [bc1, bc2, bc3]
         return (Jp, bcs)
-class ASMShiftedPoisson:
-    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=True, refinement=10):
+class MGASMShiftedPoisson:
+    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=True, refinement=2):
         '''
         mesh : interval or circle to be extruded.
         '''
@@ -118,6 +118,9 @@ class ASMShiftedPoisson:
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-9,
             "pc_type": "python",
+            # "pc_python_type": "firedrake.ASMStarPC",
+            # "pc_star_construct_dim": 0,
+            # "pc_star_sub_sub_pc_type": "lu",
             "pc_python_type": "firedrake.ASMVankaPC",
             "pc_vanka_construct_dim": 0,
             "pc_vanka_sub_sub_pc_type": "lu",
@@ -151,8 +154,8 @@ class ASMShiftedPoisson:
         }
 
     def build_MH_params(self):
-        helmholtz_schur_pc_params = {
-            # 'ksp_type': 'preonly',
+        helmholtz_schur_pc_levels_params = {
+            'ksp_type': 'preonly',
             'ksp_monitor': None,
             # 'snes_monitor': None,
             'snes_type':'ksponly',
@@ -162,14 +165,30 @@ class ASMShiftedPoisson:
             "pc_python_type": "firedrake.ASMVankaPC",
             "pc_vanka_construct_dim": 0,
             "pc_vanka_sub_sub_pc_type": "lu",
+            "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
+            # 'pc_type': 'lu',
+            # 'pc_factor_mat_solver_type': 'mumps',
+        }
+        helmholtz_schur_pc_coarse_params = {
+            'ksp_type': 'preonly',
+            'ksp_monitor': None,
+            # 'snes_monitor': None,
+            'snes_type':'ksponly',
+            # 'ksp_atol': 0,
+            # 'ksp_rtol': 1e-9,
+            # "pc_type": "python",
+            # "pc_python_type": "firedrake.ASMVankaPC",
+            # "pc_vanka_construct_dim": 0,
+            # "pc_vanka_sub_sub_pc_type": "lu",
             # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
+            'pc_type': 'lu',
+            'pc_factor_mat_solver_type': 'mumps',
         }
         mg_levels_params = {
             'ksp_type': 'gmres',
-            'snes_type':'ksponly',
             # 'ksp_view': None,
             # 'snes_monitor': None,
-            'ksp_monitor': None,
+            # 'ksp_monitor': None,
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'fieldsplit',
@@ -187,12 +206,15 @@ class ASMShiftedPoisson:
                 'ksp_type': 'preonly',
                 'pc_type': 'python',
                 'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_params,
+                'helmholtzschurpc': helmholtz_schur_pc_levels_params,
                 }
         }
+        # mg_levels_params = {
+        #                     'ksp_type': 'preonly',
+        #                     'pc_type': 'lu',
+        #                 }
         mg_coarse_params = {
             'ksp_type': 'gmres',
-            'snes_type':'ksponly',
             # 'ksp_view': None,
             # 'snes_monitor': None,
             'ksp_monitor': None,
@@ -213,14 +235,18 @@ class ASMShiftedPoisson:
                 'ksp_type': 'preonly',
                 'pc_type': 'python',
                 'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_params,
+                'helmholtzschurpc': helmholtz_schur_pc_coarse_params,
                 }
         }
+        # mg_coarse_params = {
+        #                     'ksp_type': 'preonly',
+        #                     'pc_type': 'lu',
+        #                 }
         self.params = {
             'ksp_type': 'gmres',
             'snes_type':'ksponly',
             # 'ksp_view': None,
-            # 'snes_monitor': None,
+            'snes_monitor': None,
             'ksp_monitor': None,
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
@@ -305,12 +331,13 @@ if __name__ == "__main__":
         mesh = "circle"
         option = "random"
 
-        equ = ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=False)
+        equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=True, refinement=5)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         # equ.build_ASM_MH_params()
         # equ.build_shifted_params()
-        equ.build_FieldSplit_params()
+        # equ.build_FieldSplit_params()
+        equ.build_MH_params()
         # equ.build_direct_params()
         equ.build_NonlinearVariationalSolver()
         equ.solve()

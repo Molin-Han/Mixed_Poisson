@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-from Mixed_Poisson import ASM_Schur_shifted
+from Mixed_Poisson import MG_ASM_Schur_Shifted
 
 rate = 8000
 height_array = np.exp(np.arange(7, -3, -1.0)) * pi / rate
@@ -26,18 +26,18 @@ for i in height_array:
     ar = height/ (2 * pi * radius)
     print(f"Aspect ratio is {ar}")
     ar_list.append(ar)
-    equ_MH = ASM_Schur_shifted.ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_MH = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     print(f"!!!!The calculation is down in a {equ_MH.m.name} mesh.")
     equ_MH.build_f(option=option)
-    # equ_MH.build_shifted_params()
-    equ_MH.build_FieldSplit_params()
+    # equ_MH.build_FieldSplit_params()
+    equ_MH.build_MH_params()
     equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
-    equ_monitor = ASM_Schur_shifted.ASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
+    equ_monitor = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
     equ_monitor.build_f(option=option)
-    # equ_monitor.build_shifted_params()
-    equ_monitor.build_FieldSplit_params()
+    # equ_monitor.build_FieldSplit_params()
+    equ_monitor.build_MH_params()
     equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, artest=True)
 
@@ -47,7 +47,7 @@ j = 0
 for ratio in ar_list:
     error = np.loadtxt(f'err_ar_{ratio}.out')
     x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"ar={round(ratio,5)}")
+    ax.semilogy(x, error, label=f"ar={round(ratio,6)}")
     j+=1
     plt.legend()
     plt.xlabel("its")

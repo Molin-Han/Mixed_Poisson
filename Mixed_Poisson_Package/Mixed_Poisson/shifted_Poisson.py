@@ -128,7 +128,7 @@ class ShiftedPoisson:
             'pc_fieldsplit_schur_fact_type': 'full',
             'pc_fieldsplit_0_fields': '1',
             'pc_fieldsplit_1_fields': '0',
-            'fieldsplit_0': {
+            'fieldsplit_0': { # TODO: Only a pure mass solve is needed here.
                 'ksp_type': 'preonly',
                 'pc_type': 'bjacobi',
                 'sub_pc_type': 'ilu',
