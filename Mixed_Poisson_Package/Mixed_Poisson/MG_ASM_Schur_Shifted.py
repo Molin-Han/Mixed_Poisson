@@ -158,7 +158,7 @@ class MGASMShiftedPoisson:
             'ksp_type': 'preonly',
             'ksp_monitor': None,
             # 'snes_monitor': None,
-            'snes_type':'ksponly',
+            # 'snes_type':'ksponly',
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-9,
             "pc_type": "python",
@@ -213,35 +213,35 @@ class MGASMShiftedPoisson:
         #                     'ksp_type': 'preonly',
         #                     'pc_type': 'lu',
         #                 }
-        mg_coarse_params = {
-            'ksp_type': 'gmres',
-            # 'ksp_view': None,
-            # 'snes_monitor': None,
-            'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-8,
-            'pc_type': 'fieldsplit',
-            'pc_fieldsplit_type': 'schur',
-            'pc_fieldsplit_schur_fact_type': 'full',
-            'pc_fieldsplit_0_fields': '1',
-            'pc_fieldsplit_1_fields': '0',
-            'fieldsplit_0': {
-                'ksp_type': 'preonly',
-                'pc_type': 'bjacobi',
-                'sub_pc_type': 'ilu',
-                # 'pc_factor_mat_solver_type': 'mumps',
-            },
-            'fieldsplit_1': {
-                'ksp_type': 'preonly',
-                'pc_type': 'python',
-                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_coarse_params,
-                }
-        }
         # mg_coarse_params = {
-        #                     'ksp_type': 'preonly',
-        #                     'pc_type': 'lu',
-        #                 }
+        #     'ksp_type': 'gmres',
+        #     # 'ksp_view': None,
+        #     # 'snes_monitor': None,
+        #     'ksp_monitor': None,
+        #     # 'ksp_atol': 0,
+        #     # 'ksp_rtol': 1e-8,
+        #     'pc_type': 'fieldsplit',
+        #     'pc_fieldsplit_type': 'schur',
+        #     'pc_fieldsplit_schur_fact_type': 'full',
+        #     'pc_fieldsplit_0_fields': '1',
+        #     'pc_fieldsplit_1_fields': '0',
+        #     'fieldsplit_0': {
+        #         'ksp_type': 'preonly',
+        #         'pc_type': 'bjacobi',
+        #         'sub_pc_type': 'ilu',
+        #         # 'pc_factor_mat_solver_type': 'mumps',
+        #     },
+        #     'fieldsplit_1': {
+        #         'ksp_type': 'preonly',
+        #         'pc_type': 'python',
+        #         'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
+        #         'helmholtzschurpc': helmholtz_schur_pc_coarse_params,
+        #         }
+        # }
+        mg_coarse_params = {
+                            'ksp_type': 'preonly',
+                            'pc_type': 'lu',
+                        }
         self.params = {
             'ksp_type': 'gmres',
             'snes_type':'ksponly',
@@ -251,7 +251,8 @@ class MGASMShiftedPoisson:
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'mg',
-            'pc_mg_type': 'full', # TODO: check this option.
+            # 'pc_mg_type': 'full', # TODO: check this option.
+            'pc_mg_type': 'additive',
             'mg_levels': mg_levels_params,
             'mg_coarse': mg_coarse_params
         }
@@ -328,10 +329,11 @@ if __name__ == "__main__":
         height = pi / 20
         nlayers = 20
         radius = 2
+        refinement = 3
         mesh = "circle"
         option = "random"
 
-        equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=True, refinement=5)
+        equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=True, refinement=refinement)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f(option=option)
         # equ.build_ASM_MH_params()

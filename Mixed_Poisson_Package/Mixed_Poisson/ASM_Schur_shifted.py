@@ -26,7 +26,7 @@ class ASMShiftedPoisson:
         self.dx = 2 * pi * radius / horiz_num
         self.dz = height / nlayers
         print(f"The aspect ratio is {self.ar}")
-        
+
         # Extruded Mesh
         if mesh == "interval":
             self.m = UnitIntervalMesh(horiz_num, name='interval')
@@ -154,9 +154,6 @@ class ASMShiftedPoisson:
                 }
         }
 
-    def build_MH_params(self):
-        pass
-
     def build_NonlinearVariationalSolver(self):
         # Variational Problem
         u = self.u_sol
@@ -223,7 +220,6 @@ class ASMShiftedPoisson:
         sol_file.write(sol_u, sol_p)
 
 
-
 if __name__ == "__main__":
         horiz_num = 80
         height = pi / 20
@@ -243,4 +239,3 @@ if __name__ == "__main__":
         equ.solve()
         print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))
         equ.write()
-

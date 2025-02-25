@@ -6,7 +6,8 @@ from firedrake.output import VTKFile
 from Mixed_Poisson import MG_ASM_Schur_Shifted
 
 rate = 8000
-height_array = np.exp(np.arange(7, -3, -1.0)) * pi / rate
+# height_array = np.exp(np.arange(7, -3, -1.0)) * pi / rate
+height_array = np.exp(np.array([-3.0])) * pi / rate
 #height_array = np.array([1.0]) * pi /40
 # horiz_num = 80
 # nlayers = 20
@@ -43,15 +44,15 @@ for i in height_array:
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for ar = {ar}")
 
-j = 0
-for ratio in ar_list:
-    error = np.loadtxt(f'err_ar_{ratio}.out')
-    x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"ar={round(ratio,6)}")
-    j+=1
-    plt.legend()
-    plt.xlabel("its")
-    plt.ylabel("log_error")
-    #plt.savefig(f"error_final{ratio}.png")
+# j = 0
+# for ratio in ar_list:
+#     error = np.loadtxt(f'err_ar_{ratio}.out')
+#     x = np.arange(len(error))
+#     ax.semilogy(x, error, label=f"ar={round(ratio,6)}")
+#     j+=1
+#     plt.legend()
+#     plt.xlabel("its")
+#     plt.ylabel("log_error")
+#     #plt.savefig(f"error_final{ratio}.png")
     
-plt.savefig(f"ar_{option}_{ratio}.png")
+# plt.savefig(f"ar_{option}_{ratio}.png")

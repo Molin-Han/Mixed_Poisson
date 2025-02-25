@@ -6,11 +6,12 @@ from firedrake.output import VTKFile
 from Mixed_Poisson import MG_ASM_Schur_Shifted
 
 
-horiz_array = np.arange(2, 20, 5) * 50
+# horiz_array = np.arange(2, 40, 10) * 5
+horiz_array = np.array([32]) * 5
 # height = pi / 40
 # nlayers = 20
 height = pi / 2000
-nlayers = 200
+nlayers = 100
 radius = 2
 mesh = "circle"
 option = "random"
@@ -45,16 +46,16 @@ for i in horiz_array:
     equ_monitor.solve(monitor=True, xtest=True)
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for dx = {dx}")
-i = 0
-for dx in dx_list:
-    horiz = horiz_array[i]
-    i += 1
-    error = np.loadtxt(f'err_dx_{dx}.out')
-    x = np.arange(len(error))
-    ax.semilogy(x, error, label=f"horiz={horiz}")
-    plt.legend()
-    plt.xlabel("its")
-    plt.ylabel("log_error")
-    #plt.savefig(f"error_final{dx}.png")
+# i = 0
+# for dx in dx_list:
+#     horiz = horiz_array[i]
+#     i += 1
+#     error = np.loadtxt(f'err_dx_{dx}.out')
+#     x = np.arange(len(error))
+#     ax.semilogy(x, error, label=f"horiz={horiz}")
+#     plt.legend()
+#     plt.xlabel("its")
+#     plt.ylabel("log_error")
+#     #plt.savefig(f"error_final{dx}.png")
 
-plt.savefig(f"dx_{option}_{dx}.png")
+# plt.savefig(f"dx_{option}_{dx}.png")
