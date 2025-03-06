@@ -118,9 +118,10 @@ class ShiftedPoisson:
         }
         self.params = {
             'ksp_type': 'gmres',
-            # 'snes_monitor': None,
+            'snes_monitor': None,
             'snes_type':'ksponly',
             'ksp_monitor': None,
+            'ksp_view':None,
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'fieldsplit',
