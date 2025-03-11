@@ -211,39 +211,10 @@ class MGASMShiftedPoisson:
                 'helmholtzschurpc': helmholtz_schur_pc_levels_params,
                 }
         }
-        # mg_levels_params = {
-        #                     'ksp_type': 'preonly',
-        #                     'pc_type': 'lu',
-        #                 }
         mg_coarse_params = {
-            'ksp_type': 'gmres',
-            # 'ksp_view': None,
-            # 'snes_monitor': None,
-            'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-8,
-            'pc_type': 'fieldsplit',
-            'pc_fieldsplit_type': 'schur',
-            'pc_fieldsplit_schur_fact_type': 'full',
-            'pc_fieldsplit_0_fields': '1',
-            'pc_fieldsplit_1_fields': '0',
-            'fieldsplit_0': {
-                'ksp_type': 'preonly',
-                'pc_type': 'bjacobi',
-                'sub_pc_type': 'ilu',
-                # 'pc_factor_mat_solver_type': 'mumps',
-            },
-            'fieldsplit_1': {
-                'ksp_type': 'preonly',
-                'pc_type': 'python',
-                'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_coarse_params,
-                }
-        }
-        # mg_coarse_params = {
-        #                     'ksp_type': 'preonly',
-        #                     'pc_type': 'lu',
-        #                 }
+                            'ksp_type': 'preonly',
+                            'pc_type': 'lu',
+                        }
         self.params = {
             'ksp_type': 'gmres',
             'snes_type':'ksponly',
@@ -253,8 +224,7 @@ class MGASMShiftedPoisson:
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'mg',
-            'pc_mg_type': 'full', # TODO: check this option.
-            # 'pc_mg_type': 'additive',
+            'pc_mg_type': 'full',
             'mg_levels': mg_levels_params,
             'mg_coarse': mg_coarse_params
         }
