@@ -253,8 +253,8 @@ class MGASMShiftedPoisson:
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-8,
             'pc_type': 'mg',
-            # 'pc_mg_type': 'full', # TODO: check this option.
-            'pc_mg_type': 'additive',
+            'pc_mg_type': 'full', # TODO: check this option.
+            # 'pc_mg_type': 'additive',
             'mg_levels': mg_levels_params,
             'mg_coarse': mg_coarse_params
         }
