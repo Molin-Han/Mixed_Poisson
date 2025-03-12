@@ -16,7 +16,7 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         bcs = [bc1, bc2, bc3]
         return (Jp, bcs)
 class MGASMShiftedPoisson:
-    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=True, refinement=2):
+    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=True, refinement=3):
         '''
         mesh : interval or circle to be extruded.
         '''
@@ -83,8 +83,9 @@ class MGASMShiftedPoisson:
         elif option == "random":
             pcg = PCG64(seed=123456789)
             rg = Generator(pcg)
-            self.f = rg.normal(DG, 1.0, 2.0)
-            # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
+            # self.f = rg.normal(DG, 1.0, 2.0)
+            # self.f = as_vector([self.x*(1-self.x), self.y*(1-self.y)])
+            self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
         else:
             raise NotImplementedError("this option is not available. Please choose from regular, stiff or random.")
         One = Function(DG).assign(1.0)
@@ -154,51 +155,44 @@ class MGASMShiftedPoisson:
         }
 
     def build_MH_params(self):
-        helmholtz_schur_pc_levels_params = {
+        helmholtz_schur_pc_params = {
             'ksp_type': 'preonly',
-            'ksp_monitor': None,
-            # 'snes_monitor': None,
-            # 'snes_type':'ksponly',
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-9,
-            'ksp_max_it': 1,
-            "pc_type": "python",
-            "pc_python_type": "firedrake.ASMVankaPC",
-            "pc_vanka_construct_dim": 0,
-            "pc_vanka_sub_sub_pc_type": "lu",
-            "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
-            # 'pc_type': 'lu',
-            # 'pc_factor_mat_solver_type': 'mumps',
+            'ksp_max_its': 30,
+            'pc_type': 'mg',
+            'pc_mg_type': 'full',
+            'pc_mg_cycle_type':'v',
+            'mg_levels': {
+                            # 'ksp_type': 'gmres',
+                            'ksp_type':'richardson',
+                            'ksp_richardson_scale': 1/4,
+                            'ksp_max_it': 1,
+                            # 'ksp_monitor':None,
+                            'pc_type': 'python',
+                            # "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
+                            # "pc_star_construct_dim": 0,
+                            # "pc_star_sub_sub_pc_type": "lu",
+                            "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
+                            "pc_vanka_construct_dim": 0,
+                            "pc_vanka_sub_sub_pc_type": "lu",
+                        },
+            'mg_coarse': {'ksp_type': 'preonly',
+                            'pc_type': 'lu',
+                    },
         }
-        helmholtz_schur_pc_coarse_params = {
-            'ksp_type': 'preonly',
-            'ksp_monitor': None,
-            # 'snes_monitor': None,
-            'snes_type':'ksponly',
-            'ksp_max_it': 1,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-9,
-            # "pc_type": "python",
-            # "pc_python_type": "firedrake.ASMVankaPC",
-            # "pc_vanka_construct_dim": 0,
-            # "pc_vanka_sub_sub_pc_type": "lu",
-            # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
-            'pc_type': 'lu',
-            'pc_factor_mat_solver_type': 'mumps',
-        }
-        mg_levels_params = {
+        self.params = {
+            'mat_type': 'aij',
             'ksp_type': 'gmres',
+            'snes_type':'ksponly',
             # 'ksp_view': None,
-            # 'snes_monitor': None,
+            'snes_monitor': None,
             # 'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-8,
+            'ksp_monitor_true_residual': None,
             'pc_type': 'fieldsplit',
             'pc_fieldsplit_type': 'schur',
             'pc_fieldsplit_schur_fact_type': 'full',
             'pc_fieldsplit_0_fields': '1',
             'pc_fieldsplit_1_fields': '0',
-            'fieldsplit_0': {
+            'fieldsplit_0': { # Doing a pure mass solve for the pressure block.
                 'ksp_type': 'preonly',
                 'pc_type': 'bjacobi',
                 'sub_pc_type': 'ilu',
@@ -208,25 +202,8 @@ class MGASMShiftedPoisson:
                 'ksp_type': 'preonly',
                 'pc_type': 'python',
                 'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
-                'helmholtzschurpc': helmholtz_schur_pc_levels_params,
+                'helmholtzschurpc': helmholtz_schur_pc_params,
                 }
-        }
-        mg_coarse_params = {
-                            'ksp_type': 'preonly',
-                            'pc_type': 'lu',
-                        }
-        self.params = {
-            'ksp_type': 'gmres',
-            'snes_type':'ksponly',
-            # 'ksp_view': None,
-            'snes_monitor': None,
-            'ksp_monitor': None,
-            # 'ksp_atol': 0,
-            # 'ksp_rtol': 1e-8,
-            'pc_type': 'mg',
-            'pc_mg_type': 'full',
-            'mg_levels': mg_levels_params,
-            'mg_coarse': mg_coarse_params
         }
 
     def build_NonlinearVariationalSolver(self):

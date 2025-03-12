@@ -6,8 +6,8 @@ from firedrake.output import VTKFile
 from Mixed_Poisson import MG_ASM_Schur_Shifted
 
 
-# horiz_array = np.arange(2, 40, 10) * 5
-horiz_array = np.array([32]) * 5
+horiz_array = np.arange(2, 40, 10) * 5
+# horiz_array = np.array([32]) * 5
 # height = pi / 40
 # nlayers = 20
 height = pi / 2000

@@ -15,7 +15,7 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         return (Jp, bcs)
 
 
-horiz_num = 40
+horiz_num = 80
 height = 1
 nlayers = 20
 refinement = 2

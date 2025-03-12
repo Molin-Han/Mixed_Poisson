@@ -9,8 +9,8 @@ from Mixed_Poisson import MG_ASM_Schur_Shifted
 # horiz_num = 80
 height = pi / 2000
 horiz_num = 100
-# nlayers_array = np.arange(2, 11, 2) * 100
-nlayers_array = np.array([8.0]) * 100
+nlayers_array = np.arange(2, 11, 2) * 100
+# nlayers_array = np.array([8.0]) * 100
 radius = 2
 mesh = "circle"
 option = "random"
