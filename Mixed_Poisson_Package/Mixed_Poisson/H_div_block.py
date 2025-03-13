@@ -67,11 +67,10 @@ class ASMShiftedPoisson:
         pcg = PCG64(seed=123456789)
         rg = Generator(pcg)
         self.f = rg.normal(RT, 1.0, 2.0)
-        # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
-        # One = Function(DG).assign(1.0)
-        # area = assemble(One*dx)
-        # f_int = assemble(self.f*dx)
-        # self.f.interpolate(self.f - f_int/area)
+        One = Function(RT).assign(1.0)
+        area = assemble(One*dx)
+        f_int = assemble(self.f*dx)
+        self.f.interpolate(self.f - f_int/area)
 
     def build_FieldSplit_params(self):
         helmholtz_schur_pc_params = {
