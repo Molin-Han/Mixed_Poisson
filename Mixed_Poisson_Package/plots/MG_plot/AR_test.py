@@ -15,7 +15,8 @@ horiz_num = 100
 nlayers = 200
 radius = 2
 mesh = "circle"
-option = "random"
+option = "stiff"
+# option = "random"
 fig, ax = plt.subplots()
 ax.set_title(f"The solution error with radius {radius}.")
 
@@ -43,16 +44,3 @@ for i in height_array:
     equ_monitor.solve(monitor=True, artest=True)
 
     print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!Finish Calculation for ar = {ar}")
-
-# j = 0
-# for ratio in ar_list:
-#     error = np.loadtxt(f'err_ar_{ratio}.out')
-#     x = np.arange(len(error))
-#     ax.semilogy(x, error, label=f"ar={round(ratio,6)}")
-#     j+=1
-#     plt.legend()
-#     plt.xlabel("its")
-#     plt.ylabel("log_error")
-#     #plt.savefig(f"error_final{ratio}.png")
-    
-# plt.savefig(f"ar_{option}_{ratio}.png")

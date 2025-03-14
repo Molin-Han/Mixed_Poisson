@@ -10,6 +10,7 @@ from Mixed_Poisson import MG_ASM_Schur_Shifted
 height = pi / 2000
 horiz_num = 100
 nlayers_array = np.exp(np.arange(2, 11, 2)* 2/5) * 10
+nlayers_array = nlayers_array.astype(int)
 radius = 2
 mesh = "circle"
 option = "random"
