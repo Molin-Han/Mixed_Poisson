@@ -14,8 +14,6 @@ nlayers_array = nlayers_array.astype(int)
 # nlayers_array = np.array([8.0]) * 100
 radius = 2
 mesh = "circle"
-# option = "stiff"
-option = "random"
 fig, ax = plt.subplots()
 ax.set_title("The solution error for different dz")
 
@@ -31,17 +29,13 @@ for i in nlayers_array:
     dz_list.append(dz)
 
     equ_MH = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
-    equ_MH.build_f(option=option)
-    # equ_MH.build_FieldSplit_params()
-    # equ_MH.build_shifted_params()
+    equ_MH.build_f()
     equ_MH.build_MH_params()
     equ_MH.build_NonlinearVariationalSolver()
     equ_MH.solve(monitor=False)
 
     equ_monitor = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
-    equ_monitor.build_f(option=option)
-    # equ_monitor.build_FieldSplit_params()
-    # equ_monitor.build_shifted_params()
+    equ_monitor.build_f()
     equ_monitor.build_MH_params()
     equ_monitor.build_NonlinearVariationalSolver()
     equ_monitor.solve(monitor=True, ztest=True)

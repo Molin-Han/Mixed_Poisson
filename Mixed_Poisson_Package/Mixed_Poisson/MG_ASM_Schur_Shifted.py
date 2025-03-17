@@ -66,32 +66,32 @@ class MGASMShiftedPoisson:
 
         self.x, self.y = SpatialCoordinate(self.mesh)
 
-    def build_f(self, option="regular"):
+    def build_f(self, option="stiff"):
         '''
         option : regular or stiff or random
         '''
-        DG = FunctionSpace(self.mesh, 'DG', 0)
+        DG = VectorFunctionSpace(self.mesh, 'DG', 0)
         theta = atan2(self.y,self.x)
         if option == "regular":
             self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
 
         elif option == "stiff":
             # self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2) * (self.y -self.rad) / self.height))
-            self.f = Function(DG).interpolate(exp(-pow(theta, 2)*self.y))
+            # self.f = Function(DG).interpolate(exp(-pow(theta, 2)*self.y))
+            self.f = Function(DG).interpolate(as_vector([self.x*(1-self.x),self.y*(1-self.y)]))
+            # self.f = Function(DG).interpolate(self.y*(1-self.y))
             #self.f = Function(DG).interpolate(exp(-pow(theta, 2)))
 
         elif option == "random":
             pcg = PCG64(seed=123456789)
             rg = Generator(pcg)
-            # self.f = rg.normal(DG, 1.0, 2.0)
-            # self.f = as_vector([self.x*(1-self.x), self.y*(1-self.y)])
-            self.f = Function(DG).interpolate(10 * exp(-pow(theta, 2)))
+            self.f = rg.normal(DG, 1.0, 2.0)
         else:
             raise NotImplementedError("this option is not available. Please choose from regular, stiff or random.")
-        One = Function(DG).assign(1.0)
-        area = assemble(One*dx)
-        f_int = assemble(self.f*dx)
-        self.f.interpolate(self.f - f_int/area)
+        # One = Function(DG).assign(1.0)
+        # area = assemble(One*dx)
+        # f_int = assemble(self.f*dx)
+        # self.f.interpolate(self.f - f_int/area)
 
     def build_direct_params(self):
         self.params = {'ksp_type': 'preonly', 'pc_type':'lu', 'mat_type': 'aij', 'pc_factor_mat_solver_type': 'mumps'}
@@ -119,13 +119,10 @@ class MGASMShiftedPoisson:
             # 'ksp_atol': 0,
             # 'ksp_rtol': 1e-9,
             "pc_type": "python",
-            # "pc_python_type": "firedrake.ASMStarPC",
-            # "pc_star_construct_dim": 0,
-            # "pc_star_sub_sub_pc_type": "lu",
-            "pc_python_type": "firedrake.ASMVankaPC",
-            "pc_vanka_construct_dim": 0,
-            "pc_vanka_sub_sub_pc_type": "lu",
-            # "pc_vanka_sub_sub_pc_factor_mat_solver_type":'mumps',
+            "pc_python_type": "firedrake.ASMStarPC",
+            "pc_star_construct_dim": 0,
+            "pc_star_sub_sub_pc_type": "lu",
+            # "pc_star_sub_sub_pc_factor_mat_solver_type": "mumps",
         }
         self.params = {
             'ksp_type': 'gmres',
@@ -167,13 +164,13 @@ class MGASMShiftedPoisson:
                             'ksp_richardson_scale': 1/4,
                             'ksp_max_it': 1,
                             # 'ksp_monitor':None,
-                            'pc_type': 'python',
-                            # "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
-                            # "pc_star_construct_dim": 0,
-                            # "pc_star_sub_sub_pc_type": "lu",
-                            "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
-                            "pc_vanka_construct_dim": 0,
-                            "pc_vanka_sub_sub_pc_type": "lu",
+                            "pc_type": "python",
+                            "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
+                            "pc_star_construct_dim": 0,
+                            "pc_star_sub_sub_pc_type": "lu",
+                            # "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
+                            # "pc_vanka_construct_dim": 0,
+                            # "pc_vanka_sub_sub_pc_type": "lu",
                         },
             'mg_coarse': {'ksp_type': 'preonly',
                             'pc_type': 'lu',
@@ -183,6 +180,8 @@ class MGASMShiftedPoisson:
             'mat_type': 'aij',
             'ksp_type': 'gmres',
             'snes_type':'ksponly',
+            'ksp_atol': 0,
+            'ksp_rtol': 1e-8,
             # 'ksp_view': None,
             'snes_monitor': None,
             # 'ksp_monitor': None,
@@ -213,7 +212,7 @@ class MGASMShiftedPoisson:
         q = self.q
         v = self.v
         f = self.f
-        self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx + f * q * dx
+        self.F = (inner(u, v) - div(v)*p + div(u)*q)*dx - inner(f,v) * dx
         self.shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx # + f * q * dx
         Jp = derivative(self.shift, self.sol)
 
@@ -271,8 +270,6 @@ class MGASMShiftedPoisson:
         sol_file = VTKFile('sol_MH.pvd')
         sol_file.write(sol_u, sol_p)
 
-
-
 if __name__ == "__main__":
         horiz_num = 80
         height = pi / 20
@@ -280,16 +277,10 @@ if __name__ == "__main__":
         radius = 2
         refinement = 3
         mesh = "circle"
-        option = "random"
-
         equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=True, refinement=refinement)
         print(f"The calculation is down in a {equ.m.name} mesh.")
-        equ.build_f(option=option)
-        # equ.build_ASM_MH_params()
-        # equ.build_shifted_params()
-        # equ.build_FieldSplit_params()
+        equ.build_f()
         equ.build_MH_params()
-        # equ.build_direct_params()
         equ.build_NonlinearVariationalSolver()
         equ.solve()
         print("!!!!!!!!!!!!!!!",norm(assemble(equ.F, bcs=equ.bcs).riesz_representation()))

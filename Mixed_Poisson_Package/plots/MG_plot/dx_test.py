@@ -14,8 +14,6 @@ height = pi / 2000
 nlayers = 100
 radius = 2
 mesh = "circle"
-# option = "stiff"
-option = "random"
 fig, ax = plt.subplots()
 ax.set_title("The solution error for different dx")
 
@@ -31,7 +29,7 @@ for i in horiz_array:
     dx_list.append(dx)
 
     equ_MH = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
-    equ_MH.build_f(option=option)
+    equ_MH.build_f()
     # equ_MH.build_FieldSplit_params()
     # equ_MH.build_shifted_params()
     equ_MH.build_MH_params()
@@ -39,7 +37,7 @@ for i in horiz_array:
     equ_MH.solve(monitor=False)
 
     equ_monitor = MG_ASM_Schur_Shifted.MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh)
-    equ_monitor.build_f(option=option)
+    equ_monitor.build_f()
     # equ_monitor.build_FieldSplit_params()
     # equ_monitor.build_shifted_params()
     equ_monitor.build_MH_params()
