@@ -164,3 +164,4 @@ cython_debug/
 *.pvd
 *.out
 *.png
+*.pvtu

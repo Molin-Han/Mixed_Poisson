@@ -13,7 +13,7 @@ nlayers_array = np.exp(np.arange(2, 11, 2)* 2/5) * 10
 nlayers_array = nlayers_array.astype(int)
 # nlayers_array = np.array([8.0]) * 100
 radius = 2
-mesh = "circle"
+mesh = "interval"
 fig, ax = plt.subplots()
 ax.set_title("The solution error for different dz")
 

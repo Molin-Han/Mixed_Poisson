@@ -13,7 +13,7 @@ horiz_array = np.arange(2, 40, 10) * 5
 height = pi / 2000
 nlayers = 100
 radius = 2
-mesh = "circle"
+mesh = "interval"
 fig, ax = plt.subplots()
 ax.set_title("The solution error for different dx")
 

@@ -14,7 +14,7 @@ height_array = np.exp(np.arange(7, -3, -1.0)) * pi / rate
 horiz_num = 100
 nlayers = 200
 radius = 2
-mesh = "circle"
+mesh = "interval"
 fig, ax = plt.subplots()
 ax.set_title(f"The solution error with radius {radius}.")
 
