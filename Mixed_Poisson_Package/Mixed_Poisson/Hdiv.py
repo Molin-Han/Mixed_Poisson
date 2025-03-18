@@ -3,6 +3,8 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
+# This file solves individually the Hdiv velocity block which will appear in the Mixed Poisson system using a naive preconditioner solving with multigrid and a ASMStar patch line smoother to improve horizonal robustness and solving efficiency.
+# This file is implemented in the way that no class object is included to reduce the complexness for code interpretation and understanding.
 class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
     _prefix = "helmholtzschurpc_"
     def form(self, pc, u, v):

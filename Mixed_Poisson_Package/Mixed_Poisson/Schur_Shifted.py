@@ -4,6 +4,8 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
+# This file implements the idea of using the shifted preconditioner to solve the Poisson equation. The two AuxiliaryOperatorPC are used to enable the two preconditioners which in the end turned out to be unnecessary. The file shifted_Poisson.py implemented the correct version of this.
+
 class HDivHelmholtzPC(AuxiliaryOperatorPC):
     _prefix = "helmholtzpc_"
     def form(self, pc, U, V):

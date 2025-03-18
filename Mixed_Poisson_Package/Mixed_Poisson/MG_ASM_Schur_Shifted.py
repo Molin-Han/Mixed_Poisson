@@ -3,7 +3,8 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-# TODO: This is the implementation without using the Auxiliary Operator PC to express Jp for the shifted PC and use Schur complement to eliminate the pressure. 
+# This is the implementation without using the Auxiliary Operator PC to express Jp for the shifted PC and use Schur complement to eliminate the pressure. 
+# This file also implement the multigrid to the fieldsplit0 Hdiv velocity block to ensure the robustness in horizontal mesh size.
 class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
     _prefix = "helmholtzschurpc_"
     def form(self, pc, u, v):

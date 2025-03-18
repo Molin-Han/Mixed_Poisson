@@ -4,6 +4,7 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 
+# This aims to implement the GTMG preconditioner to solve the naive Mixed Poisson system, but it didn't work due to a firedrake issue where it has no built-in vertically constant space for RT element.
 # Extruded Mesh
 m = CircleManifoldMesh(80, radius=2)
 height = 4 * pi

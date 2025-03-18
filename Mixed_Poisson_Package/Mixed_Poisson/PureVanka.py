@@ -5,6 +5,7 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson.Poisson import Poisson
+# This file solves the Poisson equation without using vertical lumping idea, instead, the pure ASMVanka line smoother is used in each GMRES iteration.
 
 class PureVanka(Poisson):
 

@@ -4,7 +4,7 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson.Poisson import Poisson
-
+# This code implements the MeshHierarchy for solving the Mixed Poisson equation that enables the vertical lumping idea to create the vertically constant space as the coarse grid. And solving the fine grid with an ASMVanka PC. This file codes the Mixed Poisson equation with NonlinearVariationalSolver.
 
 class PoissonMeshHierarchy(Poisson):
         def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):

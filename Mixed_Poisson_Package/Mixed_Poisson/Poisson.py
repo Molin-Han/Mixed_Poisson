@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
-
+# This file codes the Mixed Poisson equation which will be solved with different preconditioning technique.
 class Poisson:
     def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
         '''

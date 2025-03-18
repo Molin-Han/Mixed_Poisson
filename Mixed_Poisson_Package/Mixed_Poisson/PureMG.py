@@ -4,7 +4,7 @@ import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
 from Mixed_Poisson.Poisson import Poisson
-
+# This is the LinearVariationalSolver version for solving the Mixed Poisson equation with ASMStar.
 
 class PureMG(Poisson):
     def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval"):
