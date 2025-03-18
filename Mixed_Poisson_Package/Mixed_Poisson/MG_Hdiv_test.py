@@ -17,18 +17,17 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         bc3 = DirichletBC(W, as_vector([0., 0.]), "on_boundary")
         bcs = [bc1, bc2, bc3]
         return (Jp, bcs)
-    
 
 height=pi/40
 nlayers=20
 horiz_num=80
-radius=2
 refinement=3
 
 m = UnitIntervalMesh(horiz_num, name='interval')
 mesh = ExtrudedMesh(m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
 mh = MeshHierarchy(m, refinement_levels=refinement)
 hierarchy = ExtrudedMeshHierarchy(mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='uniform')
+mesh = hierarchy[-1]
 CG_1 = FiniteElement("CG", interval, 1)
 DG_0 = FiniteElement("DG", interval, 0)
 P1P0 = TensorProductElement(CG_1, DG_0)
@@ -40,21 +39,20 @@ RT = FunctionSpace(mesh, RT_e)
 DG = FunctionSpace(mesh, 'DG', 0)
 W = RT * DG
 
-u, p = TrialFunctions(W)
-v, q = TestFunctions(W)
-
 sol = Function(W) # solution in mixed space
-u_sol, p_sol = split(sol)
-
+u, p = split(sol)
+v, q = TestFunctions(W)
 x, y = SpatialCoordinate(mesh)
 
 f_DG = VectorFunctionSpace(mesh, 'DG', 0)
 # f = Function(f_DG).interpolate(as_vector([x*(1-x),y*(1-y)]))
-f = Function(DG).interpolate(y*(1-y))
 
-# pcg = PCG64(seed=123456789)
-# rg = Generator(pcg)
-# f = rg.normal(f_DG, 1.0, 2.0)
+theta = atan2(y,x)
+# f = Function(DG).interpolate(exp(-pow(theta, 2)*y))
+
+pcg = PCG64(seed=123456789)
+rg = Generator(pcg)
+f = rg.normal(f_DG, 1.0, 2.0)
 
 helmholtz_schur_pc_params = {
             'ksp_type': 'preonly',
@@ -69,17 +67,17 @@ helmholtz_schur_pc_params = {
                             'ksp_max_it': 1,
                             # 'ksp_monitor':None,
                             "pc_type": "python",
-                            "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
-                            "pc_star_construct_dim": 0,
-                            "pc_star_sub_sub_pc_type": "lu",
-                            # "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
-                            # "pc_vanka_construct_dim": 0,
-                            # "pc_vanka_sub_sub_pc_type": "lu",
+                            # "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
+                            # "pc_star_construct_dim": 0,
+                            # "pc_star_sub_sub_pc_type": "lu",
+                            "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
+                            "pc_vanka_construct_dim": 0,
+                            "pc_vanka_sub_sub_pc_type": "lu",
                         },
             'mg_coarse': {'ksp_type': 'preonly',
                             'pc_type': 'lu',
                     },
-        }
+}
 params = {
             'mat_type': 'aij',
             'ksp_type': 'gmres',
@@ -107,15 +105,10 @@ params = {
                 'pc_python_type': __name__ + '.HDivHelmholtzSchurPC',
                 'helmholtzschurpc': helmholtz_schur_pc_params,
                 }
-        }
+}
 
-
-
-# F = (inner(u, v) - div(v)*p + div(u)*q)*dx
-F = inner(u,v) * dx
-# F += - div(v) * p *dx
-# F += div(u) * q * dx
-# F += - inner(f,v) * dx
+F = (inner(u, v) - div(v)*p + div(u)*q)*dx
+F += - inner(f,v) * dx
 # F += f * q * dx
 shift = (inner(u, v) - div(v)*p + div(u)*q + p * q)*dx # + f * q * dx
 Jp = derivative(shift, sol)
@@ -127,9 +120,9 @@ bcs = [bc1, bc2, bc3]
 
 v_basis = VectorSpaceBasis(constant=True) #pressure field nullspace
 nullspace = MixedVectorSpaceBasis(W, [W.sub(0), v_basis])
-# trans_null = VectorSpaceBasis(constant=True)
-# trans_nullspace = MixedVectorSpaceBasis(W, [W.sub(0), trans_null])
+trans_null = VectorSpaceBasis(constant=True)
+trans_nullspace = MixedVectorSpaceBasis(W, [W.sub(0), trans_null])
 
 prob_w = NonlinearVariationalProblem(F, sol, bcs=bcs, Jp=Jp)
-solver_w = NonlinearVariationalSolver(prob_w,nullspace=nullspace,solver_parameters=params)
+solver_w = NonlinearVariationalSolver(prob_w,nullspace=nullspace,transpose_nullspace=trans_nullspace,solver_parameters=params)
 solver_w.solve()
