@@ -3,6 +3,9 @@ import numpy as np
 import scipy as sp
 from matplotlib import pyplot as plt
 from firedrake.output import VTKFile
+from petsc4py import PETSc
+
+print = PETSc.Sys.Print
 # This is the implementation without using the Auxiliary Operator PC to express Jp for the shifted PC and use Schur complement to eliminate the pressure. 
 # This file also implement the multigrid to the fieldsplit0 Hdiv velocity block to ensure the robustness in horizontal mesh size.
 class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
@@ -17,7 +20,7 @@ class HDivHelmholtzSchurPC(AuxiliaryOperatorPC):
         bcs = [bc1, bc2, bc3]
         return (Jp, bcs)
 class MGASMShiftedPoisson:
-    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", MH=True, refinement=3):
+    def __init__(self, height=pi/40, nlayers=20, horiz_num=80, radius=2, mesh="interval", refinement=3):
         '''
         mesh : interval or circle to be extruded.
         '''
@@ -27,22 +30,20 @@ class MGASMShiftedPoisson:
         self.dx = 2 * pi * radius / horiz_num
         self.dz = height / nlayers
         print(f"The aspect ratio is {self.ar}")
-        
+        distribution_parameters = {"partition": True, "overlap_type": (DistributedMeshOverlapType.VERTEX, 2)}
         # Extruded Mesh
         if mesh == "interval":
-            self.m = UnitIntervalMesh(horiz_num, name='interval')
-            self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='uniform')
-        if mesh == "circle":
-            self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle')
-            self.mesh = ExtrudedMesh(self.m, nlayers, layer_height = height/nlayers, extrusion_type='radial')
-
-        if MH:
-            # Create a ExtrudedMesh Hierarchy to achieve the vertical lumping space
+            self.m = UnitIntervalMesh(horiz_num, name='interval', distribution_parameters=distribution_parameters)
             self.mh = MeshHierarchy(self.m, refinement_levels=refinement)
-            if mesh == "interval":
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='uniform')
-            if mesh == "circle":
-                self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='radial')
+        if mesh == "circle":
+            self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle',distribution_parameters=distribution_parameters)
+            self.mh = MeshHierarchy(self.m, refinement_levels=refinement)
+
+        if mesh == "interval":
+            self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='uniform')
+        if mesh == "circle":
+            self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='radial')
+        self.mesh = self.hierarchy[-1] # TODO: This is crucial.
 
 
         # Mixed Finite Element Space
@@ -67,7 +68,7 @@ class MGASMShiftedPoisson:
 
         self.x, self.y = SpatialCoordinate(self.mesh)
 
-    def build_f(self, option="stiff"):
+    def build_f(self, option="random"):
         '''
         option : regular or stiff or random
         '''
@@ -169,16 +170,13 @@ class MGASMShiftedPoisson:
                             "pc_python_type": "firedrake.ASMStarPC", # TODO: shall we use AssembledPC?
                             "pc_star_construct_dim": 0,
                             "pc_star_sub_sub_pc_type": "lu",
-                            # "pc_python_type": "firedrake.ASMVankaPC", # TODO: shall we use AssembledPC?
-                            # "pc_vanka_construct_dim": 0,
-                            # "pc_vanka_sub_sub_pc_type": "lu",
                         },
             'mg_coarse': {'ksp_type': 'preonly',
                             'pc_type': 'lu',
                     },
         }
         self.params = {
-            'mat_type': 'aij',
+            # 'mat_type': 'aij',
             'ksp_type': 'gmres',
             'snes_type':'ksponly',
             'ksp_atol': 0,
@@ -223,9 +221,9 @@ class MGASMShiftedPoisson:
         bc3 = DirichletBC(self.W.sub(0), as_vector([0., 0.]), "on_boundary")
         self.bcs = [bc1, bc2, bc3]
 
-        v_basis = VectorSpaceBasis(constant=True) #pressure field nullspace
+        v_basis = VectorSpaceBasis(constant=True, comm=COMM_WORLD) #pressure field nullspace
         self.nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), v_basis])
-        trans_null = VectorSpaceBasis(constant=True)
+        trans_null = VectorSpaceBasis(constant=True, comm=COMM_WORLD)
         self.trans_nullspace = MixedVectorSpaceBasis(self.W, [self.W.sub(0), trans_null])
 
         self.prob_w = NonlinearVariationalProblem(self.F, self.sol, bcs=self.bcs, Jp=Jp)
@@ -236,7 +234,6 @@ class MGASMShiftedPoisson:
                                                     options_prefix='mixed_nonlinear')
 
     def solve(self, monitor=False, xtest=False, ztest=False, artest=False):
-
         if monitor:
             self.sol_final = np.loadtxt(f'sol_final.out')
             error_list = []
@@ -277,8 +274,8 @@ if __name__ == "__main__":
         nlayers = 20
         radius = 2
         refinement = 3
-        mesh = "circle"
-        equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, MH=True, refinement=refinement)
+        mesh = "interval"
+        equ = MGASMShiftedPoisson(height=height, nlayers=nlayers, horiz_num=horiz_num, radius=radius, mesh=mesh, refinement=refinement)
         print(f"The calculation is down in a {equ.m.name} mesh.")
         equ.build_f()
         equ.build_MH_params()
