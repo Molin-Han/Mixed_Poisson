@@ -35,16 +35,13 @@ class MGASMShiftedPoisson:
         if mesh == "interval":
             self.m = UnitIntervalMesh(horiz_num, name='interval', distribution_parameters=distribution_parameters)
             self.mh = MeshHierarchy(self.m, refinement_levels=refinement)
+            self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='uniform')
         if mesh == "circle":
             self.m = CircleManifoldMesh(horiz_num, radius=radius, name='circle',distribution_parameters=distribution_parameters)
             self.mh = MeshHierarchy(self.m, refinement_levels=refinement)
-
-        if mesh == "interval":
-            self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='uniform')
-        if mesh == "circle":
             self.hierarchy = ExtrudedMeshHierarchy(self.mh, height,base_layer=nlayers,refinement_ratio=1, extrusion_type='radial')
-        self.mesh = self.hierarchy[-1] # TODO: This is crucial.
 
+        self.mesh = self.hierarchy[-1] # TODO: This is crucial.
 
         # Mixed Finite Element Space
         CG_1 = FiniteElement("CG", interval, 1)
