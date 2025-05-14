@@ -23,7 +23,7 @@ class PoissonMeshHierarchy(Poisson):
                         'ksp_type': 'gmres',
                         'snes_monitor': None,
                         # 'snes_type':'ksponly',
-                        # 'ksp_monitor': None,
+                        'ksp_monitor': None,
                         # "ksp_monitor_true_residual": None,
                         'pc_type': 'mg',
                         'pc_mg_type': 'full',
